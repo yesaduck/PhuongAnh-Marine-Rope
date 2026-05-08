@@ -1,0 +1,248 @@
+﻿import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { fetchProductById } from '../services/productService'
+import { addItem } from '../services/cartService'
+import Gallery from '../components/Gallery'
+
+export default function ProductDetail() {
+  const { id } = useParams()
+  const [product, setProduct] = useState(null)
+  const [quantity, setQuantity] = useState(1)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    fetchProductById(id).then(setProduct)
+  }, [id])
+
+  const handleAddToCart = () => {
+    addItem(product, quantity)
+    navigate('/cart')
+  }
+
+  if (!product) return <div className="p-8 text-center">Äang táº£i sáº£n pháº©m...</div>
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-10 space-y-10">
+      <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <Gallery images={product.images} />
+        <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="space-y-3">
+            <p className="text-sm uppercase tracking-[0.3em] text-brand-900">{product.category}</p>
+            <h1 className="text-3xl font-semibold text-slate-900">{product.name}</h1>
+            <p className="text-brand-900 text-2xl font-bold">{product.price > 0 ? `${product.price.toLocaleString()} Ä‘` : 'LiÃªn há»‡'}</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-3xl bg-slate-50 p-4"><span className="text-sm text-slate-600">ÄÆ°á»ng kÃ­nh</span><p className="mt-2 font-semibold">{product.size}</p></div>
+            <div className="rounded-3xl bg-slate-50 p-4"><span className="text-sm text-slate-600">Cháº¥t liá»‡u</span><p className="mt-2 font-semibold">{product.material}</p></div>
+            <div className="rounded-3xl bg-slate-50 p-4"><span className="text-sm text-slate-600">Táº£i trá»ng</span><p className="mt-2 font-semibold">{product.load || 'N/A'}</p></div>
+            <div className="rounded-3xl bg-slate-50 p-4"><span className="text-sm text-slate-600">Tá»“n kho</span><p className="mt-2 font-semibold">{product.stock}</p></div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold">MÃ´ táº£ sáº£n pháº©m</h2>
+              <p className="mt-2 text-slate-600">{product.description}</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-slate-700">Sá»‘ lÆ°á»£ng:</label>
+              <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} className="w-24 rounded-2xl border border-slate-300 px-4 py-2 text-sm" />
+            </div>
+            <button onClick={handleAddToCart} className="w-full rounded-3xl bg-brand-900 px-6 py-3 text-sm font-semibold text-white shadow-lg">ThÃªm giá» hÃ ng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+import { useState } from 'react'
+import { createOrder } from '../services/orderService'
+import { getCart, clearCart } from '../services/cartService'
+import { useNavigate } from 'react-router-dom'
+
+export default function Checkout() {
+  const [form, setForm] = useState({ customer_name: '', phone: '', address: '', note: '' })
+  const [success, setSuccess] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+  const cart = getCart()
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    try {
+      await createOrder({ ...form, total_price: total, items: cart })
+      clearCart()
+      setSuccess('Äáº·t hÃ ng thÃ nh cÃ´ng. ChÃºng tÃ´i sáº½ liÃªn há»‡ láº¡i vá»›i báº¡n sá»›m nháº¥t.')
+      setError('')
+      setTimeout(() => navigate('/'), 2000)
+    } catch (err) {
+      setError('CÃ³ lá»—i trong quÃ¡ trÃ¬nh gá»­i Ä‘Æ¡n hÃ ng. Vui lÃ²ng thá»­ láº¡i.')
+      setSuccess('')
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-10">
+      <h1 className="text-3xl font-semibold text-slate-900">Thanh toÃ¡n</h1>
+      <p className="mt-2 text-slate-600">Nháº­p thÃ´ng tin giao hÃ ng Ä‘á»ƒ hoÃ n táº¥t Ä‘Æ¡n hÃ ng.</p>
+
+      <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          {error && <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div>}
+          {success && <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">{success}</div>}
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="space-y-2 text-sm text-slate-700">
+              Há» tÃªn
+              <input required value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-700" />
+            </label>
+            <label className="space-y-2 text-sm text-slate-700">
+              Sá»‘ Ä‘iá»‡n thoáº¡i
+              <input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-700" />
+            </label>
+          </div>
+          <label className="space-y-2 text-sm text-slate-700">
+            Äá»‹a chá»‰ giao hÃ ng
+            <input required value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-700" />
+          </label>
+          <label className="space-y-2 text-sm text-slate-700">
+            Ghi chÃº
+            <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} rows="4" className="w-full rounded-3xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-700" />
+          </label>
+          <button type="submit" className="w-full rounded-3xl bg-brand-900 px-6 py-3 text-sm font-semibold text-white">Gá»­i Ä‘áº·t hÃ ng</button>
+        </form>
+
+        <aside className="space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Tá»•ng Ä‘Æ¡n hÃ ng</h2>
+            <p className="mt-3 text-3xl font-bold text-brand-900">{total.toLocaleString()} Ä‘</p>
+          </div>
+          <div className="space-y-3">
+            <a href="tel:0901234567" className="block rounded-3xl bg-slate-100 px-5 py-3 text-center font-semibold text-slate-900">Gá»i nhanh</a>
+            <a href="https://zalo.me/0901234567" target="_blank" rel="noreferrer" className="block rounded-3xl bg-brand-900 px-5 py-3 text-center font-semibold text-white">Chat Zalo</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  )
+}
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import CartItem from '../components/CartItem'
+import { getCart, removeItem, updateItem, clearCart } from '../services/cartService'
+
+export default function Cart() {
+  const [items, setItems] = useState([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    setItems(getCart())
+  }, [])
+
+  const handleUpdate = (productId, quantity) => {
+    setItems(updateItem(productId, quantity))
+  }
+
+  const handleRemove = (productId) => {
+    setItems(removeItem(productId))
+  }
+
+  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-10 space-y-10">
+      <div className="space-y-3">
+        <h1 className="text-3xl font-semibold text-slate-900">Giá» hÃ ng cá»§a báº¡n</h1>
+        <p className="text-slate-600">Kiá»ƒm tra sáº£n pháº©m, thay Ä‘á»•i sá»‘ lÆ°á»£ng hoáº·c xÃ³a máº·t hÃ ng trÆ°á»›c khi thanh toÃ¡n.</p>
+      </div>
+      {items.length === 0 ? (
+        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center">
+          <p className="text-slate-700">Giá» hÃ ng trá»‘ng.</p>
+          <Link to="/products" className="mt-4 inline-block rounded-full bg-brand-900 px-6 py-3 text-sm font-semibold text-white">Mua ngay</Link>
+        </div>
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-[1.5fr_0.8fr]">
+          <div className="space-y-4">
+            {items.map((item) => (
+              <CartItem key={item.productId} item={item} onUpdate={handleUpdate} onRemove={handleRemove} />
+            ))}
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold">Tá»•ng tiá»n</h2>
+            <p className="mt-4 text-4xl font-bold text-brand-900">{totalPrice.toLocaleString()} Ä‘</p>
+            <button onClick={() => navigate('/checkout')} className="mt-6 w-full rounded-3xl bg-brand-900 px-6 py-3 text-sm font-semibold text-white">Äáº·t hÃ ng</button>
+            <button onClick={() => { clearCart(); setItems([]) }} className="mt-3 w-full rounded-3xl border border-slate-300 px-6 py-3 text-sm text-slate-700">XÃ³a giá» hÃ ng</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+import { useEffect, useState } from 'react'
+import { fetchMyOrders } from '../services/orderService'
+
+export default function MyOrders() {
+  const [orders, setOrders] = useState([])
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      const data = await fetchMyOrders()
+      setOrders(data)
+    }
+    loadOrders()
+  }, [])
+
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      confirmed: 'bg-blue-100 text-blue-800',
+      shipping: 'bg-purple-100 text-purple-800',
+      completed: 'bg-green-100 text-green-800',
+      cancelled: 'bg-red-100 text-red-800'
+    }
+    return colors[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 py-20">
+      <div className="mx-auto w-full max-w-4xl rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
+        <h1 className="text-3xl font-semibold text-slate-900">ÄÆ¡n hÃ ng cá»§a tÃ´i</h1>
+        <p className="mt-2 text-slate-600">Lá»‹ch sá»­ Ä‘Æ¡n hÃ ng vÃ  tráº¡ng thÃ¡i giao hÃ ng.</p>
+
+        {orders.length === 0 ? (
+          <div className="mt-8 text-center text-slate-500">Báº¡n chÆ°a cÃ³ Ä‘Æ¡n hÃ ng nÃ o.</div>
+        ) : (
+          <div className="mt-8 space-y-6">
+            {orders.map((order) => (
+              <div key={order.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-lg font-semibold text-slate-900">ÄÆ¡n hÃ ng #{order.id}</p>
+                    <p className="text-sm text-slate-600">{new Date(order.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`rounded-full px-3 py-1 text-sm font-semibold ${getStatusColor(order.status)}`}>
+                      {order.status}
+                    </span>
+                    <span className="text-lg font-bold text-brand-900">{Number(order.total_price).toLocaleString()} Ä‘</span>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-2xl bg-white p-4">
+                  <p className="text-sm font-semibold text-slate-900">Chi tiáº¿t sáº£n pháº©m</p>
+                  <ul className="mt-3 space-y-2">
+                    {order.items.map((item, idx) => (
+                      <li key={idx} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                        <span className="text-sm text-slate-700">Sáº£n pháº©m ID: {item.product_id}</span>
+                        <span className="text-sm font-semibold text-slate-900">{item.quantity} x {Number(item.price).toLocaleString()} Ä‘</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
