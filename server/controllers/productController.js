@@ -1,41 +1,50 @@
-import * as productModel from '../models/productModel.js'
+import * as productModel from '../models/productModel.js';
 
 export async function getProducts(req, res) {
-  const result = await productModel.getAllProducts(req.query)
-  const parsed = result.items.map((product) => ({
-    ...product,
-    images: product.images ? JSON.parse(product.images) : []
-  }))
-  res.json({ items: parsed, total: result.total })
+  try {
+    const result = await productModel.getAllProducts(req.query);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi khi lấy danh sách sản phẩm.' });
+  }
 }
 
 export async function getProduct(req, res) {
-  const { id } = req.params
-  const product = await productModel.getProductById(id)
-  if (!product) {
-    return res.status(404).json({ error: 'Sản phẩm không tồn tại.' })
+  try {
+    const product = await productModel.getProductById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Sản phẩm không tồn tại.' });
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi server.' });
   }
-  product.images = product.images ? JSON.parse(product.images) : []
-  res.json(product)
 }
 
 export async function createProduct(req, res) {
-  const product = await productModel.createProduct(req.body)
-  res.status(201).json(product)
+  try {
+    const product = await productModel.createProduct(req.body);
+    res.status(201).json(product);
+  } catch (error) {
+    res.status(400).json({ error: 'Dữ liệu không hợp lệ.' });
+  }
 }
 
 export async function updateProduct(req, res) {
-  const { id } = req.params
-  const existing = await productModel.getProductById(id)
-  if (!existing) {
-    return res.status(404).json({ error: 'Sản phẩm không tồn tại.' })
+  try {
+    const existing = await productModel.getProductById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Sản phẩm không tồn tại.' });
+
+    const updated = await productModel.updateProduct(req.params.id, req.body);
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ error: 'Cập nhật thất bại.' });
   }
-  const updated = await productModel.updateProduct(id, req.body)
-  res.json(updated)
 }
 
 export async function deleteProduct(req, res) {
-  const { id } = req.params
-  await productModel.deleteProduct(id)
-  res.json({ success: true })
+  try {
+    await productModel.deleteProduct(req.params.id);
+    res.json({ success: true, message: 'Đã xóa sản phẩm.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Xóa thất bại.' });
+  }
 }

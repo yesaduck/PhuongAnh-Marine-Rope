@@ -36,6 +36,12 @@ export async function login(credentials) {
   return response.data
 }
 
+export async function socialLogin(payload) {
+  const response = await api.post('/auth/social-login', payload)
+  saveSession(response.data)
+  return response.data
+}
+
 export async function loginAdmin(credentials) {
   const data = await login({ email: credentials.username, password: credentials.password })
   if (!['admin', 'staff'].includes(data.user.role)) {
