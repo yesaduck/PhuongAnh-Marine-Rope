@@ -10,6 +10,10 @@ CREATE TABLE users (
   password VARCHAR(255) NOT NULL,
   role ENUM('customer','admin','staff') NOT NULL DEFAULT 'customer',
   address TEXT,
+<<<<<<< HEAD
+=======
+  avatar VARCHAR(255),
+>>>>>>> 5ea6ccf (feat: hoàn thiện giao diện admin, client và fix lỗi import excel)
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

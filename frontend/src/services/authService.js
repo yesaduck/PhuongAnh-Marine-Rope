@@ -36,12 +36,19 @@ export async function login(credentials) {
   return response.data
 }
 
+<<<<<<< HEAD
 export async function loginAdmin(credentials) {
   const data = await login({ email: credentials.username, password: credentials.password })
   if (!['admin', 'staff'].includes(data.user.role)) {
     throw new Error('Bạn không có quyền quản trị.')
   }
   return data
+=======
+export async function socialLogin(payload) {
+  const response = await api.post('/auth/social-login', payload)
+  saveSession(response.data)
+  return response.data
+>>>>>>> 5ea6ccf (feat: hoàn thiện giao diện admin, client và fix lỗi import excel)
 }
 
 export async function register(payload) {
@@ -64,4 +71,9 @@ export async function updateProfile(payload) {
 export function logout() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
+<<<<<<< HEAD
 }
+=======
+  window.location.href = '/login'
+}
+>>>>>>> 5ea6ccf (feat: hoàn thiện giao diện admin, client và fix lỗi import excel)
