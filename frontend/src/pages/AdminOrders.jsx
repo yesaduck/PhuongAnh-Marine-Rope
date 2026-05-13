@@ -1,95 +1,203 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
 import { fetchOrders, updateOrderStatus } from '../services/orderService'
+import './AdminOrders.css'
 
-const orderStatuses = ['pending', 'confirmed', 'shipping', 'completed', 'cancelled']
+const orderStatuses = [
+  { value: 'pending', label: 'Chờ xử lý' },
+  { value: 'confirmed', label: 'Đã xác nhận' },
+  { value: 'shipping', label: 'Đang giao' },
+  { value: 'completed', label: 'Hoàn thành' },
+  { value: 'cancelled', label: 'Đã hủy' }
+]
+
+const statusMap = Object.fromEntries(orderStatuses.map((item) => [item.value, item.label]))
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([])
-  const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [expandedId, setExpandedId] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     loadOrders()
   }, [])
 
+  const filteredOrders = useMemo(() => {
+    const keyword = search.toLowerCase().trim()
+
+    return orders.filter((order) => {
+      const matchSearch =
+        !keyword ||
+        String(order.id).includes(keyword) ||
+        order.customer_name?.toLowerCase().includes(keyword) ||
+        order.phone?.includes(keyword)
+
+      const matchStatus = !statusFilter || order.status === statusFilter
+
+      return matchSearch && matchStatus
+    })
+  }, [orders, search, statusFilter])
+
   const loadOrders = async () => {
     try {
+      setLoading(true)
       const data = await fetchOrders()
-      setOrders(data)
-    } catch (err) {
-      setError('Không thể tải đơn hàng.')
+      setOrders(Array.isArray(data) ? data : [])
+    } catch {
+      toast.error('Không thể tải đơn hàng.')
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleStatusChange = async (orderId, status) => {
     try {
       await updateOrderStatus(orderId, status)
-      setOrders((prev) => prev.map((order) => (order.id === orderId ? { ...order, status } : order)))
-    } catch (err) {
-      setError('Cập nhật trạng thái thất bại.')
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, status } : order
+        )
+      )
+
+      toast.success('Cập nhật trạng thái thành công.')
+    } catch {
+      toast.error('Cập nhật trạng thái thất bại.')
     }
   }
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-3xl font-semibold text-slate-900">Quản lý đơn hàng</h1>
-        <p className="mt-2 text-slate-600">Xem chi tiết đơn hàng và cập nhật trạng thái.</p>
-      </div>
+    <div className="admin-orders-page">
+      <Toaster position="top-right" />
 
-      {error && <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div>}
+      <section className="orders-hero">
+        <div>
+          <h1>Quản lý đơn hàng</h1>
+          <p>Xem đơn hàng, lọc trạng thái và cập nhật tiến độ giao hàng.</p>
+        </div>
 
-      <div className="space-y-4">
-        {orders.map((order) => (
-          <div key={order.id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-lg font-semibold text-slate-900">Đơn hàng #{order.id}</p>
-                <p className="text-sm text-slate-600">Khách hàng: {order.customer_name} • {order.phone}</p>
+        <button type="button" className="refresh-btn" onClick={loadOrders}>
+          Làm mới
+        </button>
+      </section>
+
+      <section className="orders-card">
+        <div className="orders-toolbar">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo mã đơn, tên khách, số điện thoại..."
+          />
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">Tất cả trạng thái</option>
+            {orderStatuses.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="orders-summary">
+          <span>Tổng đơn: {orders.length}</span>
+          <span>Đang hiển thị: {filteredOrders.length}</span>
+        </div>
+
+        <div className="orders-list">
+          {filteredOrders.map((order) => (
+            <article key={order.id} className="order-item">
+              <div className="order-main">
+                <div>
+                  <h2>Đơn hàng #{order.id}</h2>
+                  <p>
+                    {order.customer_name || 'Khách hàng'} • {order.phone || 'Chưa có SĐT'}
+                  </p>
+                </div>
+
+                <span className={`status-badge ${order.status}`}>
+                  {statusMap[order.status] || order.status}
+                </span>
               </div>
-              <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">{order.status}</span>
-            </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <div>
-                <p className="text-sm text-slate-500">Tổng tiền</p>
-                <p className="mt-2 text-xl font-semibold text-brand-900">{Number(order.total_price).toLocaleString()} đ</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Số sản phẩm</p>
-                <p className="mt-2 text-xl font-semibold text-slate-900">{order.items.length}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Ngày đặt</p>
-                <p className="mt-2 text-xl font-semibold text-slate-900">{new Date(order.created_at).toLocaleDateString()}</p>
-              </div>
-            </div>
+              <div className="order-info-grid">
+                <div>
+                  <span>Tổng tiền</span>
+                  <strong>{Number(order.total_price || 0).toLocaleString('vi-VN')} đ</strong>
+                </div>
 
-            <div className="mt-6 grid gap-3 md:grid-cols-5">
-              {orderStatuses.map((status) => (
-                <button
-                  key={status}
-                  onClick={() => handleStatusChange(order.id, status)}
-                  className="rounded-3xl border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
+                <div>
+                  <span>Số sản phẩm</span>
+                  <strong>{order.items?.length || 0}</strong>
+                </div>
 
-            <div className="mt-6 rounded-3xl bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-900">Chi tiết đơn hàng</p>
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                {order.items.map((item) => (
-                  <li key={item.id} className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                    <span>{item.product_name || `Sản phẩm #${item.product_id}`}</span>
-                    <span className="font-semibold">{item.quantity} x {Number(item.price).toLocaleString()} đ</span>
-                  </li>
+                <div>
+                  <span>Ngày đặt</span>
+                  <strong>
+                    {order.created_at
+                      ? new Date(order.created_at).toLocaleDateString('vi-VN')
+                      : 'Không rõ'}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="status-actions">
+                {orderStatuses.map((status) => (
+                  <button
+                    key={status.value}
+                    type="button"
+                    className={order.status === status.value ? 'active' : ''}
+                    onClick={() => handleStatusChange(order.id, status.value)}
+                  >
+                    {status.label}
+                  </button>
                 ))}
-              </ul>
+              </div>
+
+              <button
+                type="button"
+                className="detail-toggle"
+                onClick={() =>
+                  setExpandedId(expandedId === order.id ? null : order.id)
+                }
+              >
+                {expandedId === order.id ? 'Ẩn chi tiết' : 'Xem chi tiết'}
+              </button>
+
+              {expandedId === order.id && (
+                <div className="order-detail">
+                  <h3>Chi tiết đơn hàng</h3>
+
+                  <ul>
+                    {(order.items || []).map((item) => (
+                      <li key={item.id || item.product_id}>
+                        <span>
+                          {item.product_name || `Sản phẩm #${item.product_id}`}
+                        </span>
+
+                        <strong>
+                          {item.quantity} x {Number(item.price || 0).toLocaleString('vi-VN')} đ
+                        </strong>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </article>
+          ))}
+
+          {!loading && filteredOrders.length === 0 && (
+            <div className="empty-orders">
+              Không tìm thấy đơn hàng phù hợp.
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+      </section>
     </div>
   )
 }

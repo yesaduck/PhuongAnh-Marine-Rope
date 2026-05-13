@@ -1,39 +1,63 @@
+import './About.css'
+
 export default function About() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 space-y-16">
-      <section className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
-        <div className="space-y-6">
-          <p className="text-sm uppercase tracking-[0.3em] text-brand-900">Về chúng tôi</p>
-          <h1 className="text-4xl font-semibold text-slate-900">Xưởng sản xuất dây ngư nghiệp uy tín của Phương Anh</h1>
-          <p className="text-slate-600">Với nhiều năm kinh nghiệm, chúng tôi cung cấp dây neo tàu, dây thừng và lưới đánh cá đáp ứng nhu cầu ngư nghiệp toàn quốc.</p>
+    <div className="about-page">
+      <section className="about-hero">
+        <div className="about-hero-content">
+          <span>Về chúng tôi</span>
+          <h1>Xưởng sản xuất dây ngư nghiệp uy tín của Phương Anh</h1>
+          <p>
+            Chuyên cung cấp dây neo tàu, dây thừng, dây lưới và vật tư ngư nghiệp
+            chất lượng cao cho ngư dân, đại lý và khách hàng sỉ trên toàn quốc.
+          </p>
         </div>
-        <div className="rounded-3xl overflow-hidden shadow-lg">
-          <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80" alt="Xưởng dây" className="h-full w-full object-cover" />
+
+        <div className="about-hero-image">
+          <img
+            src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80"
+            alt="Xưởng sản xuất dây ngư nghiệp"
+          />
         </div>
       </section>
 
-      <section className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-3xl bg-white p-8 shadow-sm">
-          <h2 className="text-3xl font-semibold text-brand-900">10+</h2>
-          <p className="mt-2 text-slate-600">Năm hoạt động</p>
+      <section className="about-stats">
+        <div>
+          <h2>10+</h2>
+          <p>Năm hoạt động</p>
         </div>
-        <div className="rounded-3xl bg-white p-8 shadow-sm">
-          <h2 className="text-3xl font-semibold text-brand-900">50+</h2>
-          <p className="mt-2 text-slate-600">Sản phẩm dây và lưới</p>
+
+        <div>
+          <h2>50+</h2>
+          <p>Sản phẩm dây và lưới</p>
         </div>
-        <div className="rounded-3xl bg-white p-8 shadow-sm">
-          <h2 className="text-3xl font-semibold text-brand-900">100%</h2>
-          <p className="mt-2 text-slate-600">Cam kết chất lượng</p>
+
+        <div>
+          <h2>100%</h2>
+          <p>Cam kết chất lượng</p>
         </div>
-        <div className="rounded-3xl bg-white p-8 shadow-sm">
-          <h2 className="text-3xl font-semibold text-brand-900">Giao hàng</h2>
-          <p className="mt-2 text-slate-600">Hỗ trợ giao hàng nhanh cho khách sỉ và ngư dân.</p>
+
+        <div>
+          <h2>24/7</h2>
+          <p>Hỗ trợ khách sỉ và ngư dân</p>
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-slate-900">Cam kết chất lượng</h2>
-        <p className="mt-4 text-slate-600">Mỗi sản phẩm được kiểm tra kỹ lưỡng trước khi giao, đảm bảo độ bền, độ chịu tải và chống mài mòn theo tiêu chuẩn ngư nghiệp.</p>
+      <section className="about-quality">
+        <div>
+          <h2>Cam kết chất lượng</h2>
+          <p>
+            Mỗi sản phẩm được kiểm tra kỹ trước khi giao, đảm bảo độ bền,
+            độ chịu tải và khả năng chống mài mòn phù hợp với môi trường biển.
+          </p>
+        </div>
+
+        <ul>
+          <li>Độ bền cao, dùng tốt trong môi trường nước mặn.</li>
+          <li>Hỗ trợ tư vấn chọn dây theo nhu cầu thực tế.</li>
+          <li>Giá tốt cho khách hàng sỉ, đại lý và xưởng.</li>
+          <li>Giao hàng linh hoạt theo khu vực.</li>
+        </ul>
       </section>
     </div>
   )

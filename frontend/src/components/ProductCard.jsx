@@ -1,24 +1,74 @@
 import { Link } from 'react-router-dom'
+import './ProductCard.css'
+
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5002'
+
+function normalizeImages(images) {
+  if (!images) return []
+
+  if (Array.isArray(images)) return images
+
+  if (typeof images === 'string') {
+    try {
+      const parsed = JSON.parse(images)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return images
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+    }
+  }
+
+  return []
+}
+
+function getImageUrl(src) {
+  if (!src) return 'https://via.placeholder.com/400x300?text=No+Image'
+  if (src.startsWith('http')) return src
+  if (src.startsWith('blob:')) return src
+  return `${API_ORIGIN}${src}`
+}
 
 export default function ProductCard({ product }) {
-  const imageUrl = product.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'
-  const priceLabel = product.price > 0 ? `${product.price.toLocaleString()} đ` : 'Liên hệ'
+  const images = normalizeImages(product.images)
+  const imageUrl = getImageUrl(images[0])
+  const priceLabel =
+    product.price > 0
+      ? `${Number(product.price).toLocaleString('vi-VN')} đ`
+      : 'Liên hệ'
 
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <Link to={`/products/${product.id}`}>
-        <img src={imageUrl} alt={product.name} className="h-56 w-full object-cover" />
+    <article className="product-card">
+      <Link to={`/products/${product.id}`} className="product-card-image">
+        <img
+          src={imageUrl}
+          alt={product.name}
+          onError={(e) => {
+            e.currentTarget.src =
+              'https://via.placeholder.com/400x300?text=No+Image'
+          }}
+        />
       </Link>
-      <div className="p-4 space-y-3">
+
+      <div className="product-card-body">
         <div>
-          <p className="text-sm text-slate-500">{product.category}</p>
-          <h3 className="text-lg font-semibold text-slate-900">{product.name}</h3>
+          <p className="product-card-category">
+            {product.category || 'Khác'}
+          </p>
+
+          <h3>{product.name}</h3>
         </div>
-        <p className="text-sm text-slate-600">Kích thước: {product.size}</p>
-        <p className="text-sm text-slate-600">Chất liệu: {product.material}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-brand-900 font-semibold">{priceLabel}</span>
-          <Link to={`/products/${product.id}`} className="rounded-full bg-brand-900 px-4 py-2 text-sm text-white">Mua ngay</Link>
+
+        <p>Kích thước: {product.size || 'Đang cập nhật'}</p>
+        <p>Chất liệu: {product.material || 'Đang cập nhật'}</p>
+
+        <div className="product-card-footer">
+          <span>{priceLabel}</span>
+
+          <Link to={`/products/${product.id}`}>
+            Mua ngay
+          </Link>
         </div>
       </div>
     </article>

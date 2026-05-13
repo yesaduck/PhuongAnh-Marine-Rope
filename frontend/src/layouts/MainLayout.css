@@ -1,0 +1,23 @@
+.main-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+}
+
+.main-layout-content {
+  flex: 1;
+  width: 100%;
+}
+
+/* Giúp nội dung không bị dính sát footer nếu page quá ngắn */
+.main-layout-content > * {
+  min-height: auto;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .main-layout {
+    background: #f9fafb;
+  }
+}

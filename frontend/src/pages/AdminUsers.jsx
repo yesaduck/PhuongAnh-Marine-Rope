@@ -1,119 +1,388 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
 import { fetchUsers, updateUser, deleteUser } from '../services/userService'
+import './AdminUsers.css'
 
-const emptyForm = { full_name: '', email: '', phone: '', role: 'customer', address: '' }
+const emptyForm = {
+  full_name: '',
+  email: '',
+  phone: '',
+  role: 'customer',
+  address: ''
+}
+
+const roles = [
+  { value: 'customer', label: 'Khách hàng' },
+  { value: 'staff', label: 'Nhân viên' },
+  { value: 'admin', label: 'Admin' }
+]
+
+const roleMap = Object.fromEntries(roles.map((role) => [role.value, role.label]))
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([])
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(null)
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [formErrors, setFormErrors] = useState({})
 
   useEffect(() => {
     loadUsers()
   }, [])
 
+  const filteredUsers = useMemo(() => {
+    const keyword = search.toLowerCase().trim()
+
+    return users.filter((user) => {
+      const matchSearch =
+        !keyword ||
+        user.full_name?.toLowerCase().includes(keyword) ||
+        user.email?.toLowerCase().includes(keyword) ||
+        user.phone?.includes(keyword)
+
+      const matchRole = !roleFilter || user.role === roleFilter
+
+      return matchSearch && matchRole
+    })
+  }, [users, search, roleFilter])
+
   const loadUsers = async () => {
-    const data = await fetchUsers()
-    setUsers(data)
+    try {
+      setLoading(true)
+      const data = await fetchUsers()
+      setUsers(Array.isArray(data) ? data : [])
+    } catch {
+      toast.error('Không thể tải danh sách người dùng.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleEdit = (user) => {
+  const handleChange = (field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value
+    }))
+
+    setFormErrors((prev) => ({
+      ...prev,
+      [field]: ''
+    }))
+  }
+
+  const validateForm = () => {
+    const errors = {}
+
+    if (!form.full_name.trim()) {
+      errors.full_name = 'Chưa nhập họ tên người dùng.'
+    }
+
+    if (!form.email.trim()) {
+      errors.email = 'Chưa nhập email.'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = 'Email không đúng định dạng.'
+    }
+
+    if (form.phone && !/^(0|\+84)[0-9]{9,10}$/.test(form.phone)) {
+      errors.phone = 'Số điện thoại không hợp lệ.'
+    }
+
+    if (!form.role) {
+      errors.role = 'Chưa chọn vai trò.'
+    }
+
+    setFormErrors(errors)
+
+    const firstError = Object.values(errors)[0]
+    if (firstError) toast.error(firstError)
+
+    return Object.keys(errors).length === 0
+  }
+
+  const openEditModal = (user) => {
     setEditingId(user.id)
     setForm({
-      full_name: user.full_name,
-      email: user.email,
+      full_name: user.full_name || '',
+      email: user.email || '',
       phone: user.phone || '',
-      role: user.role,
+      role: user.role || 'customer',
       address: user.address || ''
     })
-    setMessage('')
-    setError('')
+    setFormErrors({})
+    setModalOpen(true)
   }
 
-  const handleDelete = async (id) => {
-    await deleteUser(id)
-    setUsers((prev) => prev.filter((user) => user.id !== id))
+  const closeModal = () => {
+    setModalOpen(false)
+    setEditingId(null)
+    setForm(emptyForm)
+    setFormErrors({})
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+
+    if (!editingId) {
+      toast.error('Chọn một người dùng để cập nhật.')
+      return
+    }
+
+    if (!validateForm()) return
+
     try {
-      if (!editingId) {
-        setError('Chọn một người dùng để cập nhật.')
-        return
-      }
-      await updateUser(editingId, form)
-      setMessage('Cập nhật người dùng thành công.')
-      setError('')
-      setEditingId(null)
-      setForm(emptyForm)
-      loadUsers()
+      setLoading(true)
+
+      await updateUser(editingId, {
+        ...form,
+        full_name: form.full_name.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
+        address: form.address.trim()
+      })
+
+      toast.success('Cập nhật người dùng thành công.')
+      closeModal()
+      await loadUsers()
     } catch (err) {
-      setError(err.response?.data?.error || 'Cập nhật thất bại.')
+      toast.error(err.response?.data?.error || 'Cập nhật thất bại.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirmDelete) return
+
+    try {
+      setLoading(true)
+      await deleteUser(confirmDelete.id)
+      setUsers((prev) => prev.filter((user) => user.id !== confirmDelete.id))
+      toast.success('Xóa người dùng thành công.')
+      setConfirmDelete(null)
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Xóa người dùng thất bại.')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-3xl font-semibold text-slate-900">Quản lý người dùng</h1>
-        <p className="mt-2 text-slate-600">Xem và cập nhật vai trò, thông tin người dùng trong hệ thống.</p>
-      </div>
+    <div className="admin-users-page">
+      <Toaster position="top-right" />
 
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-900">Danh sách người dùng</h2>
-          <div className="space-y-3">
-            {users.map((user) => (
-              <div key={user.id} className="flex flex-wrap items-center justify-between rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <div>
-                  <p className="font-semibold text-slate-900">{user.full_name}</p>
-                  <p className="text-sm text-slate-600">{user.email} • {user.role}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={() => handleEdit(user)} className="rounded-3xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white">Sửa</button>
-                  <button onClick={() => handleDelete(user.id)} className="rounded-3xl bg-red-500 px-4 py-2 text-sm font-semibold text-white">Xóa</button>
-                </div>
-              </div>
-            ))}
-          </div>
+      <section className="users-hero">
+        <div>
+          <h1>Quản lý người dùng</h1>
+          <p>Xem, tìm kiếm và cập nhật vai trò người dùng trong hệ thống.</p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-900">{editingId ? 'Cập nhật người dùng' : 'Chọn người dùng để sửa'}</h2>
-          {message && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">{message}</div>}
-          {error && <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div>}
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <label className="block text-sm text-slate-700">
-              Họ tên
-              <input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none" />
-            </label>
-            <label className="block text-sm text-slate-700">
-              Email
-              <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none" />
-            </label>
-            <label className="block text-sm text-slate-700">
-              Số điện thoại
-              <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none" />
-            </label>
-            <label className="block text-sm text-slate-700">
-              Vai trò
-              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none">
-                <option value="customer">Khách hàng</option>
-                <option value="staff">Nhân viên</option>
-                <option value="admin">Admin</option>
-              </select>
-            </label>
-            <label className="block text-sm text-slate-700">
-              Địa chỉ
-              <textarea rows="3" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="mt-2 w-full rounded-3xl border border-slate-300 px-4 py-3 outline-none" />
-            </label>
-            <button type="submit" className="rounded-3xl bg-brand-900 px-6 py-3 text-sm font-semibold text-white">Lưu thay đổi</button>
+        <button type="button" className="refresh-btn" onClick={loadUsers}>
+          Làm mới
+        </button>
+      </section>
+
+      <section className="users-card">
+        <div className="users-toolbar">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo tên, email hoặc số điện thoại..."
+          />
+
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+          >
+            <option value="">Tất cả vai trò</option>
+            {roles.map((role) => (
+              <option key={role.value} value={role.value}>
+                {role.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="users-summary">
+          <span>Tổng người dùng: {users.length}</span>
+          <span>Đang hiển thị: {filteredUsers.length}</span>
+        </div>
+
+        <div className="users-table-wrap">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>Người dùng</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th>Vai trò</th>
+                <th>Địa chỉ</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredUsers.map((user) => (
+                <tr key={user.id}>
+                  <td>
+                    <strong>{user.full_name || 'Chưa có tên'}</strong>
+                    <span>ID: {user.id}</span>
+                  </td>
+
+                  <td>{user.email}</td>
+                  <td>{user.phone || 'Chưa có'}</td>
+
+                  <td>
+                    <span className={`role-badge ${user.role}`}>
+                      {roleMap[user.role] || user.role}
+                    </span>
+                  </td>
+
+                  <td>{user.address || 'Chưa có'}</td>
+
+                  <td>
+                    <div className="user-actions">
+                      <button type="button" onClick={() => openEditModal(user)}>
+                        Sửa
+                      </button>
+
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => setConfirmDelete(user)}
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {!loading && filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="empty-users">
+                    Không tìm thấy người dùng phù hợp.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {modalOpen && (
+        <div className="user-modal-overlay">
+          <form className="user-modal" onSubmit={handleSubmit}>
+            <div className="modal-header">
+              <div>
+                <h2>Cập nhật người dùng</h2>
+                <p>Sửa thông tin tài khoản và phân quyền người dùng.</p>
+              </div>
+
+              <button type="button" className="close-modal-btn" onClick={closeModal}>
+                ×
+              </button>
+            </div>
+
+            <div className="user-form-grid">
+              <label className={formErrors.full_name ? 'field-error' : ''}>
+                Họ tên <span>*</span>
+                <input
+                  value={form.full_name}
+                  onChange={(e) => handleChange('full_name', e.target.value)}
+                  placeholder="Nguyễn Văn A"
+                />
+                {formErrors.full_name && <small>{formErrors.full_name}</small>}
+              </label>
+
+              <label className={formErrors.email ? 'field-error' : ''}>
+                Email <span>*</span>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  placeholder="email@gmail.com"
+                />
+                {formErrors.email && <small>{formErrors.email}</small>}
+              </label>
+
+              <label className={formErrors.phone ? 'field-error' : ''}>
+                Số điện thoại
+                <input
+                  value={form.phone}
+                  onChange={(e) => handleChange('phone', e.target.value)}
+                  placeholder="0901234567"
+                />
+                {formErrors.phone && <small>{formErrors.phone}</small>}
+              </label>
+
+              <label className={formErrors.role ? 'field-error' : ''}>
+                Vai trò <span>*</span>
+                <select
+                  value={form.role}
+                  onChange={(e) => handleChange('role', e.target.value)}
+                >
+                  {roles.map((role) => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+                {formErrors.role && <small>{formErrors.role}</small>}
+              </label>
+
+              <label className="full">
+                Địa chỉ
+                <textarea
+                  rows="3"
+                  value={form.address}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  placeholder="Nhập địa chỉ nếu có"
+                />
+              </label>
+            </div>
+
+            <div className="modal-actions">
+              <button type="button" className="secondary-btn" onClick={closeModal}>
+                Hủy
+              </button>
+
+              <button type="submit" className="primary-btn" disabled={loading}>
+                {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </button>
+            </div>
           </form>
         </div>
-      </div>
+      )}
+
+      {confirmDelete && (
+        <div className="confirm-overlay">
+          <div className="confirm-box">
+            <h3>Xác nhận xóa</h3>
+            <p>
+              Bạn có chắc muốn xóa người dùng <strong>{confirmDelete.full_name}</strong>?
+              Thao tác này không thể hoàn tác.
+            </p>
+
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Hủy
+              </button>
+
+              <button type="button" className="danger-btn" onClick={handleDelete}>
+                Xóa người dùng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

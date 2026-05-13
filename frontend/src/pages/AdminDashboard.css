@@ -1,0 +1,275 @@
+.admin-dashboard-page {
+  display: grid;
+  gap: 22px;
+}
+
+.dashboard-loading {
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.dashboard-hero,
+.dashboard-chart-card,
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+}
+
+.dashboard-hero {
+  border-radius: 24px;
+  padding: 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.dashboard-hero h1,
+.chart-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.dashboard-hero h1 {
+  font-size: 30px;
+}
+
+.dashboard-hero p,
+.chart-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.export-report-btn {
+  min-height: 42px;
+  border: none;
+  border-radius: 14px;
+  padding: 0 18px;
+  background: #16a34a;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.export-report-btn:hover {
+  background: #15803d;
+}
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.stat-card {
+  border-radius: 20px;
+  padding: 18px;
+  border-left: 5px solid #2563eb;
+}
+
+.stat-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 10px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.stat-card.blue {
+  border-left-color: #2563eb;
+}
+
+.stat-card.blue strong {
+  color: #2563eb;
+}
+
+.stat-card.amber {
+  border-left-color: #f59e0b;
+}
+
+.stat-card.amber strong {
+  color: #d97706;
+}
+
+.stat-card.green {
+  border-left-color: #10b981;
+}
+
+.stat-card.green strong {
+  color: #059669;
+}
+
+.stat-card.purple {
+  border-left-color: #8b5cf6;
+}
+
+.stat-card.purple strong {
+  color: #7c3aed;
+}
+
+.stat-card.violet {
+  border-left-color: #a855f7;
+}
+
+.stat-card.violet strong {
+  color: #9333ea;
+}
+
+.stat-card.cyan {
+  border-left-color: #06b6d4;
+}
+
+.stat-card.cyan strong {
+  color: #0891b2;
+}
+
+.stat-card.red {
+  border-left-color: #ef4444;
+}
+
+.stat-card.red strong {
+  color: #dc2626;
+}
+
+.stat-card.slate {
+  border-left-color: #64748b;
+}
+
+.stat-card.slate strong {
+  color: #334155;
+}
+
+.dashboard-chart-card {
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.chart-header select {
+  min-height: 40px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0 12px;
+  outline: none;
+  color: #334155;
+  font-weight: 700;
+}
+
+.chart-body {
+  height: 240px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 16px 6px 0;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.chart-column {
+  min-width: 34px;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 42px;
+  min-height: 4px;
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+  border-radius: 10px 10px 0 0;
+  transition: 0.25s;
+}
+
+.chart-column span {
+  min-height: 18px;
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.chart-tooltip {
+  display: none;
+  position: absolute;
+  top: -28px;
+  background: #0f172a;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 5;
+}
+
+.chart-column:hover .chart-tooltip {
+  display: block;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-hero,
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-hero,
+  .dashboard-chart-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .dashboard-hero h1 {
+    font-size: 24px;
+  }
+
+  .export-report-btn {
+    width: 100%;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-body {
+    height: 220px;
+  }
+
+  .chart-column {
+    min-width: 42px;
+  }
+}

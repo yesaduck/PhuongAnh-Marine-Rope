@@ -1,0 +1,384 @@
+.admin-users-page {
+  display: grid;
+  gap: 22px;
+}
+
+.users-hero,
+.users-card,
+.user-modal,
+.confirm-box {
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+}
+
+.users-hero {
+  border-radius: 24px;
+  padding: 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.users-hero h1,
+.modal-header h2,
+.confirm-box h3 {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.users-hero h1 {
+  font-size: 30px;
+}
+
+.users-hero p,
+.modal-header p,
+.confirm-box p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.refresh-btn,
+.primary-btn,
+.secondary-btn,
+.danger-btn,
+.user-actions button {
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  transition: 0.2s;
+  border-radius: 14px;
+}
+
+.refresh-btn,
+.primary-btn,
+.secondary-btn,
+.danger-btn {
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.refresh-btn,
+.primary-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.refresh-btn:hover,
+.primary-btn:hover {
+  background: #1d4ed8;
+}
+
+.secondary-btn {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.secondary-btn:hover {
+  background: #dbeafe;
+}
+
+.danger-btn {
+  background: #dc2626;
+  color: white;
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.users-card {
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.users-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
+}
+
+.users-toolbar input,
+.users-toolbar select,
+.user-form-grid input,
+.user-form-grid select,
+.user-form-grid textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 12px 14px;
+  outline: none;
+  font-size: 14px;
+}
+
+.users-toolbar input,
+.users-toolbar select {
+  min-height: 44px;
+}
+
+.users-toolbar input:focus,
+.users-toolbar select:focus,
+.user-form-grid input:focus,
+.user-form-grid select:focus,
+.user-form-grid textarea:focus {
+  border-color: #2563eb;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.users-summary {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.users-summary span {
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.users-table-wrap {
+  margin-top: 18px;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.users-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.users-table th {
+  text-align: left;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  padding: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.users-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 14px;
+}
+
+.users-table td strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.users-table td span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.role-badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0 !important;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 12px !important;
+  font-weight: 900;
+}
+
+.role-badge.customer {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.role-badge.staff {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.role-badge.admin {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.user-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.user-actions button {
+  padding: 9px 14px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.user-actions button:hover {
+  background: #dbeafe;
+}
+
+.user-actions button.danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.user-actions button.danger:hover {
+  background: #fecaca;
+}
+
+.empty-users {
+  text-align: center;
+  padding: 28px !important;
+  color: #94a3b8 !important;
+  font-weight: 800;
+}
+
+.user-modal-overlay,
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.user-modal {
+  width: 100%;
+  max-width: 760px;
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.confirm-box {
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.close-modal-btn {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 14px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 26px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.user-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.user-form-grid label {
+  display: grid;
+  gap: 8px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.user-form-grid label span {
+  color: #ef4444;
+}
+
+.user-form-grid label small {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.user-form-grid label.field-error input,
+.user-form-grid label.field-error select,
+.user-form-grid label.field-error textarea {
+  border-color: #ef4444;
+  background: #fffafa;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.modal-actions,
+.confirm-actions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .users-hero {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .users-hero h1 {
+    font-size: 24px;
+  }
+
+  .refresh-btn {
+    width: 100%;
+  }
+
+  .users-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .users-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .user-modal {
+    padding: 18px;
+    max-height: 94vh;
+  }
+
+  .user-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions,
+  .confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions button,
+  .confirm-actions button {
+    width: 100%;
+  }
+}
