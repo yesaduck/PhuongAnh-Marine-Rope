@@ -7,7 +7,7 @@ Phương Anh Rope Shop là hệ thống thương mại điện tử được xâ
 Hệ thống cho phép khách hàng tìm kiếm sản phẩm, đặt hàng online, theo dõi lịch sử mua hàng. Đồng thời hỗ trợ nhân viên và quản trị viên quản lý sản phẩm, đơn hàng và người dùng thông qua hệ thống phân quyền.
 
 ---
-
+```
 📁 Cấu trúc dự án
 PhuongAnh-Rope-Shop/
 │
@@ -104,6 +104,7 @@ PhuongAnh-Rope-Shop/
 ├── README.md
 ├── package.json
 └── .env
+```
 🏗 Kiến trúc hệ thống
 
 Frontend (ReactJS)
