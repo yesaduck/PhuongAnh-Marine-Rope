@@ -1,0 +1,680 @@
+/* =====================================================
+   ADMIN ATTRIBUTES PAGE — Optimized CSS
+   - Card / thẻ hiển thị rõ, không bị che
+   - Modal fixed không bị clip bởi overflow cha
+   - Gradient icon thay bằng flat color (không nhấp nháy khi stream)
+   - Responsive web & mobile đầy đủ
+   ===================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ─── PAGE WRAPPER ──────────────────────────────────── */
+
+.admin-attributes-page {
+  display: grid;
+  gap: 22px;
+  width: 100%;
+  /* KHÔNG overflow: hidden — modal position:fixed sẽ bị clip */
+}
+
+/* ─── SHARED CARD BASE ──────────────────────────────── */
+
+.admin-attributes-hero,
+.admin-attributes-form-card,
+.admin-attributes-card,
+.attribute-stat-card {
+  background: #ffffff;
+  /* Viền đậm hơn để thẻ nổi rõ khỏi nền */
+  border: 1.5px solid #cbd5e1;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.06),
+    0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+/* ─── HERO ──────────────────────────────────────────── */
+
+.admin-attributes-hero {
+  border-radius: 22px;
+  padding: 28px 32px;
+}
+
+.admin-attributes-hero > span {
+  display: inline-flex;
+  margin-bottom: 10px;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: #eff6ff;
+  border-radius: 999px;
+  padding: 5px 13px;
+}
+
+.admin-attributes-hero h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.admin-attributes-hero p {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ─── STAT CARDS GRID ───────────────────────────────── */
+
+.attribute-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.attribute-stat-card {
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s, border-color 0.18s, background 0.18s, box-shadow 0.18s;
+}
+
+.attribute-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.08),
+    0 16px 36px rgba(15, 23, 42, 0.1);
+}
+
+.attribute-stat-card.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12),
+    0 8px 24px rgba(37, 99, 235, 0.1);
+}
+
+/* ─── SHARED ICON ───────────────────────────────────── */
+
+.attribute-stat-icon,
+.attribute-card-icon,
+.attribute-delete-icon,
+.attributes-empty-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Stat icon — flat blue (không nhấp nháy khi stream) */
+.attribute-stat-icon {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Card icon */
+.attribute-card-icon {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Delete modal icon */
+.attribute-delete-icon {
+  background: #fee2e2;
+  color: #dc2626;
+  margin-bottom: 18px;
+}
+
+/* Empty state icon */
+.attributes-empty-icon {
+  background: #f1f5f9;
+  color: #94a3b8;
+  margin: 0 auto 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+}
+
+/* ─── STAT CARD TEXT ────────────────────────────────── */
+
+.attribute-stat-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.attribute-stat-card > div > span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ─── FORM CARD & LIST CARD ─────────────────────────── */
+
+.admin-attributes-form-card,
+.admin-attributes-card {
+  border-radius: 22px;
+  padding: 26px;
+}
+
+/* ─── FORM HEADER ───────────────────────────────────── */
+
+.attributes-form-header {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.attributes-form-header h2,
+.attributes-list-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.attributes-form-header p,
+.attributes-list-header p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ─── INLINE ADD FORM ───────────────────────────────── */
+
+.admin-attributes-form {
+  display: grid;
+  grid-template-columns: 220px 1fr 180px;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* Input group wrapper */
+.attribute-input-group {
+  min-height: 48px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.attribute-input-group:focus-within {
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.attribute-input-group > span {
+  color: #94a3b8;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.attribute-input-group select,
+.attribute-input-group input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.attribute-input-group select option {
+  background: #ffffff;
+}
+
+/* Add button */
+.admin-attributes-form > button {
+  min-height: 48px;
+  border: none;
+  border-radius: 14px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+}
+
+.admin-attributes-form > button:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.admin-attributes-form > button:active {
+  transform: translateY(0);
+}
+
+.admin-attributes-form > button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── LIST HEADER ───────────────────────────────────── */
+
+.attributes-list-header {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.attributes-list-header > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* ─── SEARCH BAR ────────────────────────────────────── */
+
+.attributes-search {
+  width: min(300px, 100%);
+  height: 44px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 13px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.attributes-search:focus-within {
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.attributes-search svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.attributes-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.attributes-search input::placeholder {
+  color: #94a3b8;
+}
+
+/* ─── ATTRIBUTES GRID ───────────────────────────────── */
+
+.attributes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* ─── ATTRIBUTE CARD ────────────────────────────────── */
+
+.attribute-card {
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 38px;
+  gap: 12px;
+  align-items: center;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.attribute-card:hover {
+  border-color: #bfdbfe;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.07);
+}
+
+.attribute-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 950;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.attribute-card > div > span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Delete button trên card */
+.attribute-card > button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 11px;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.attribute-card > button:hover {
+  background: #fecaca;
+  transform: scale(1.05);
+}
+
+/* ─── EMPTY STATE ───────────────────────────────────── */
+
+.attributes-empty {
+  min-height: 240px;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 32px 24px;
+  background: #fafafa;
+}
+
+.attributes-empty h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.attributes-empty p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ─── DELETE MODAL OVERLAY ──────────────────────────── */
+
+/* Fixed — nằm ngoài mọi container có overflow/transform
+   nên không bị clip bởi bất kỳ card nào */
+.attribute-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(15, 23, 42, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* ─── DELETE MODAL BOX ──────────────────────────────── */
+
+.attribute-delete-modal {
+  position: relative;
+  width: min(440px, 100%);
+  background: #ffffff;
+  border-radius: 22px;
+  border: 1.5px solid #cbd5e1;
+  padding: 28px;
+  box-shadow:
+    0 4px 16px rgba(15, 23, 42, 0.1),
+    0 24px 64px rgba(15, 23, 42, 0.22);
+  animation: attributeModalIn 0.2s ease;
+}
+
+.attribute-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.attribute-modal-close:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.attribute-delete-modal h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.attribute-delete-modal p {
+  margin: 10px 0 22px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.attribute-delete-modal p strong {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+/* ─── MODAL ACTIONS ─────────────────────────────────── */
+
+.attribute-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1.5px solid #e2e8f0;
+  margin-top: 4px;
+}
+
+.attribute-modal-actions button {
+  min-height: 44px;
+  border: none;
+  border-radius: 13px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.attribute-modal-actions .cancel {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1.5px solid #bfdbfe;
+}
+
+.attribute-modal-actions .cancel:hover {
+  background: #dbeafe;
+}
+
+.attribute-modal-actions .confirm {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.attribute-modal-actions .confirm:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.attribute-modal-actions .confirm:active {
+  transform: translateY(0);
+}
+
+/* ─── ANIMATION ─────────────────────────────────────── */
+
+@keyframes attributeModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── RESPONSIVE — 1100px ───────────────────────────── */
+
+@media (max-width: 1100px) {
+  .attributes-grid,
+  .attribute-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-attributes-form {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  /* Input type chọn danh mục chiếm hàng đầu */
+  .admin-attributes-form > button {
+    grid-column: 1 / -1;
+    min-height: 48px;
+  }
+}
+
+/* ─── RESPONSIVE — 768px ────────────────────────────── */
+
+@media (max-width: 768px) {
+  .admin-attributes-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-attributes-form > button {
+    grid-column: unset;
+  }
+
+  .attributes-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .attributes-search {
+    width: 100%;
+  }
+}
+
+/* ─── RESPONSIVE — 640px ────────────────────────────── */
+
+@media (max-width: 640px) {
+  .admin-attributes-hero,
+  .admin-attributes-form-card,
+  .admin-attributes-card {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .admin-attributes-hero {
+    padding: 20px 18px;
+  }
+
+  .admin-attributes-hero h1 {
+    font-size: 22px;
+  }
+
+  .attribute-stats-grid,
+  .attributes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .attribute-stat-card {
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .attribute-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .attribute-modal-actions button {
+    width: 100%;
+  }
+
+  /* Nút xác nhận xoá lên trước trên mobile */
+  .attribute-modal-actions .confirm {
+    order: -1;
+  }
+
+  .attribute-delete-modal {
+    padding: 20px;
+    border-radius: 18px;
+  }
+}
+
+/* ─── RESPONSIVE — 400px ────────────────────────────── */
+
+@media (max-width: 400px) {
+  .attribute-stats-grid {
+    gap: 10px;
+  }
+
+  .attribute-stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .attribute-stat-card strong {
+    font-size: 16px;
+  }
+}

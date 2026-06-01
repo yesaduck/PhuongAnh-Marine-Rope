@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchProductById } from '../services/productService'
-import { addItem } from '../services/cartService'
+import { addItem, clearOldSharedCart } from '../services/cartService'
+import { getToken } from '../services/authService'
 import Gallery from '../components/Gallery'
 import toast, { Toaster } from 'react-hot-toast'
 import {
@@ -11,39 +12,59 @@ import {
   ChevronLeft,
   Package,
   Ruler,
-  Layers
+  Layers,
+  Weight,
+  ShieldCheck,
+  Truck,
+  Headphones,
+  BadgeDollarSign
 } from 'lucide-react'
 import './ProductDetail.css'
+
+function normalizeImages(images) {
+  if (!images) return []
+  if (Array.isArray(images)) return images
+
+  try {
+    const parsed = JSON.parse(images)
+    return Array.isArray(parsed) ? parsed : [images]
+  } catch {
+    return [images]
+  }
+}
+
+function formatMoney(value) {
+  return `${Number(value || 0).toLocaleString('vi-VN')} đ`
+}
 
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
 
   const [product, setProduct] = useState(null)
+  const [selectedVariantId, setSelectedVariantId] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const loadProduct = async () => {
+    clearOldSharedCart()
+
+    async function loadProduct() {
       try {
         setLoading(true)
+
         const data = await fetchProductById(id)
 
-        if (data && typeof data.images === 'string') {
-          try {
-            data.images = JSON.parse(data.images)
-          } catch {
-            data.images = [data.images]
-          }
+        const normalized = {
+          ...data,
+          images: normalizeImages(data.images),
+          variants: Array.isArray(data.variants) ? data.variants : []
         }
 
-        if (!Array.isArray(data.images)) {
-          data.images = []
-        }
-
-        setProduct(data)
-      } catch (error) {
-        toast.error('Không thể tải thông tin sản phẩm')
+        setProduct(normalized)
+        setSelectedVariantId(normalized.variants[0]?.id || null)
+      } catch {
+        toast.error('Không thể tải thông tin sản phẩm.')
       } finally {
         setLoading(false)
       }
@@ -52,185 +73,235 @@ export default function ProductDetail() {
     loadProduct()
   }, [id])
 
-  const increaseQuantity = () => {
-    if (product && quantity < product.stock) {
+  const selectedVariant = useMemo(() => {
+    return product?.variants?.find(
+      (item) => String(item.id) === String(selectedVariantId)
+    )
+  }, [product, selectedVariantId])
+
+  const maxStock = Number(selectedVariant?.stock || 0)
+
+  function handleSelectVariant(variantId) {
+    setSelectedVariantId(variantId)
+    setQuantity(1)
+  }
+
+  function increaseQuantity() {
+    if (quantity < maxStock) {
       setQuantity((prev) => prev + 1)
     }
   }
 
-  const decreaseQuantity = () => {
+  function decreaseQuantity() {
     setQuantity((prev) => Math.max(1, prev - 1))
   }
 
-  const handleQuantityChange = (value) => {
-    const num = Number(value)
+  function handleQuantityChange(value) {
+    const number = Number(value)
 
-    if (isNaN(num)) {
+    if (Number.isNaN(number)) {
       setQuantity(1)
       return
     }
 
-    if (!product) {
-      setQuantity(Math.max(1, num))
-      return
-    }
-
-    setQuantity(Math.max(1, Math.min(num, product.stock || 1)))
+    setQuantity(Math.max(1, Math.min(number, maxStock || 1)))
   }
 
-  const handleAddToCart = () => {
-    if (!product) return
-
-    if (product.stock <= 0) {
-      toast.error('Sản phẩm đã hết hàng!')
+  function handleAddToCart() {
+    if (!product || !selectedVariant) {
+      toast.error('Vui lòng chọn loại sản phẩm.')
       return
     }
 
-    if (quantity > product.stock) {
-      toast.error(`Chỉ còn ${product.stock} sản phẩm trong kho`)
+    if (!getToken()) {
+      toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.')
+      setTimeout(() => navigate('/login'), 700)
       return
     }
 
-    addItem(product, quantity)
-    toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng`)
+    if (maxStock <= 0) {
+      toast.error('Loại sản phẩm này đã hết hàng.')
+      return
+    }
+
+    if (quantity > maxStock) {
+      toast.error(`Chỉ còn ${maxStock} cuộn trong kho.`)
+      return
+    }
+
+    try {
+      addItem(product, selectedVariant, quantity)
+      toast.success(`Đã thêm ${quantity} cuộn vào giỏ hàng.`)
+    } catch (error) {
+      toast.error(error.message || 'Không thể thêm vào giỏ hàng.')
+    }
+  }
+
+  function handleBuyNow() {
+    handleAddToCart()
+    if (getToken() && selectedVariant && maxStock > 0) {
+      setTimeout(() => navigate('/cart'), 500)
+    }
   }
 
   if (loading) {
-    return (
-      <div className="product-detail-loading">
-        Đang tải thông tin sản phẩm...
-      </div>
-    )
+    return <div className="product-detail-loading">Đang tải thông tin sản phẩm...</div>
   }
 
   if (!product) {
-    return (
-      <div className="product-detail-not-found">
-        Sản phẩm không tồn tại!
-      </div>
-    )
+    return <div className="product-detail-not-found">Sản phẩm không tồn tại!</div>
   }
 
   return (
     <div className="product-detail-page">
       <Toaster position="top-center" />
 
-      <button
-        className="back-button"
-        onClick={() => navigate(-1)}
-      >
+      <button className="back-button" onClick={() => navigate(-1)}>
         <ChevronLeft size={18} />
         Quay lại
       </button>
 
       <div className="product-detail-layout">
-        {/* Gallery */}
-        <div className="product-gallery-card">
+        <section className="product-gallery-card">
           <Gallery images={product.images} />
-        </div>
+        </section>
 
-        {/* Info */}
-        <div className="product-info-card">
+        <section className="product-info-card">
           <div className="product-header">
             <span className="product-category">
-              {product.category || 'Sản phẩm'}
+              {selectedVariant?.category || 'Sản phẩm'}
             </span>
 
             <h1>{product.name}</h1>
 
             <p className="product-price">
-              {product.price > 0
-                ? `${Number(product.price).toLocaleString('vi-VN')} đ`
-                : 'Liên hệ'}
+              {selectedVariant
+                ? `${formatMoney(selectedVariant.price)}/cuộn`
+                : 'Vui lòng chọn loại sản phẩm'}
             </p>
           </div>
 
-          <div className="product-meta-grid">
-            <div className="meta-item">
-              <Ruler size={18} />
-              <div>
-                <span>Kích thước</span>
-                <strong>{product.size || 'N/A'}</strong>
-              </div>
-            </div>
+          <div className="variant-section">
+            <h3>Chọn loại sản phẩm</h3>
 
-            <div className="meta-item">
-              <Layers size={18} />
-              <div>
-                <span>Chất liệu</span>
-                <strong>{product.material || 'N/A'}</strong>
-              </div>
-            </div>
-
-            <div className="meta-item">
-              <Package size={18} />
-              <div>
-                <span>Tồn kho</span>
-                <strong
+            <div className="variant-options">
+              {product.variants.map((variant) => (
+                <button
+                  key={variant.id}
+                  type="button"
                   className={
-                    product.stock > 0
-                      ? 'stock-in'
-                      : 'stock-out'
+                    String(selectedVariantId) === String(variant.id)
+                      ? 'active'
+                      : ''
                   }
+                  disabled={Number(variant.stock || 0) <= 0}
+                  onClick={() => handleSelectVariant(variant.id)}
                 >
-                  {product.stock > 0
-                    ? `Còn ${product.stock}`
-                    : 'Hết hàng'}
-                </strong>
-              </div>
+                  {variant.category} - {variant.size}m - {variant.material}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="product-meta-list">
+            <div className="meta-row">
+              <span><Ruler size={18} /> Kích thước</span>
+              <strong>{selectedVariant?.size || 'N/A'} m</strong>
+            </div>
+
+            <div className="meta-row">
+              <span><Layers size={18} /> Chất liệu</span>
+              <strong>{selectedVariant?.material || 'N/A'}</strong>
+            </div>
+
+            <div className="meta-row">
+              <span><Weight size={18} /> Trọng lượng</span>
+              <strong>{selectedVariant?.weight_kg || 0} kg/cuộn</strong>
+            </div>
+
+            <div className="meta-row">
+              <span><Package size={18} /> Tồn kho</span>
+              <strong className={maxStock > 0 ? 'stock-in' : 'stock-out'}>
+                {maxStock > 0 ? `Còn ${maxStock} cuộn` : 'Hết hàng'}
+              </strong>
             </div>
           </div>
 
           <div className="product-description">
             <h2>Mô tả sản phẩm</h2>
-            <p>
-              {product.description ||
-                'Thông tin đang được cập nhật...'}
-            </p>
+            <p>{product.description || 'Thông tin đang được cập nhật...'}</p>
           </div>
 
           <div className="quantity-section">
-            <span>Số lượng</span>
+            <span>Số lượng cuộn</span>
 
             <div className="quantity-box">
-              <button
-                type="button"
-                onClick={decreaseQuantity}
-              >
+              <button type="button" onClick={decreaseQuantity}>
                 <Minus size={16} />
               </button>
 
               <input
                 type="number"
                 min="1"
-                max={product.stock || 1}
+                max={maxStock || 1}
                 value={quantity}
-                onChange={(e) =>
-                  handleQuantityChange(e.target.value)
-                }
+                onChange={(e) => handleQuantityChange(e.target.value)}
               />
 
-              <button
-                type="button"
-                onClick={increaseQuantity}
-              >
+              <button type="button" onClick={increaseQuantity}>
                 <Plus size={16} />
               </button>
             </div>
           </div>
 
-          <button
-            className="add-cart-button"
-            disabled={product.stock <= 0}
-            onClick={handleAddToCart}
-          >
-            <ShoppingCart size={20} />
-            {product.stock > 0
-              ? 'Thêm vào giỏ hàng'
-              : 'Tạm hết hàng'}
-          </button>
-        </div>
+          <div className="product-action-row">
+            <button
+              type="button"
+              className="add-cart-button"
+              disabled={!selectedVariant || maxStock <= 0}
+              onClick={handleAddToCart}
+            >
+              <ShoppingCart size={20} />
+              Thêm vào giỏ hàng
+            </button>
+
+            <button
+              type="button"
+              className="buy-now-button"
+              disabled={!selectedVariant || maxStock <= 0}
+              onClick={handleBuyNow}
+            >
+              Mua ngay
+            </button>
+          </div>
+        </section>
       </div>
+
+      <section className="product-benefits">
+        <div>
+          <ShieldCheck size={28} />
+          <strong>Sản phẩm chất lượng</strong>
+          <span>Cam kết dây bền, đạt chuẩn</span>
+        </div>
+
+        <div>
+          <BadgeDollarSign size={28} />
+          <strong>Giá cả cạnh tranh</strong>
+          <span>Giá tốt từ xưởng sản xuất</span>
+        </div>
+
+        <div>
+          <Truck size={28} />
+          <strong>Giao hàng toàn quốc</strong>
+          <span>Giao nhanh, đúng hẹn</span>
+        </div>
+
+        <div>
+          <Headphones size={28} />
+          <strong>Hỗ trợ 24/7</strong>
+          <span>Tư vấn tận tâm, nhanh chóng</span>
+        </div>
+      </section>
     </div>
   )
 }

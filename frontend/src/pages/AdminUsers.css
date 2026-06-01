@@ -1,24 +1,40 @@
-.admin-users-page {
-  display: grid;
-  gap: 22px;
+/* ===== RESET & BASE ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
+/* ===== ADMIN USERS PAGE ===== */
+.admin-users-page {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ===== SHARED CARD BASE ===== */
 .users-hero,
 .users-card,
 .user-modal,
 .confirm-box {
-  background: white;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  overflow: visible;
 }
 
+/* ===== HERO ===== */
 .users-hero {
-  border-radius: 24px;
-  padding: 26px;
+  border-radius: 20px;
+  padding: 26px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .users-hero h1,
@@ -26,21 +42,24 @@
 .confirm-box h3 {
   margin: 0;
   color: #0f172a;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .users-hero h1 {
-  font-size: 30px;
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.2;
 }
 
 .users-hero p,
 .modal-header p,
 .confirm-box p {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: #64748b;
   font-size: 14px;
+  line-height: 1.5;
 }
 
+/* ===== BUTTONS ===== */
 .refresh-btn,
 .primary-btn,
 .secondary-btn,
@@ -48,23 +67,28 @@
 .user-actions button {
   border: none;
   cursor: pointer;
-  font-weight: 800;
-  transition: 0.2s;
-  border-radius: 14px;
+  font-weight: 700;
+  transition: background 0.15s ease, transform 0.1s ease;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .refresh-btn,
 .primary-btn,
 .secondary-btn,
 .danger-btn {
-  min-height: 42px;
-  padding: 0 16px;
+  height: 42px;
+  padding: 0 18px;
+  font-size: 14px;
 }
 
 .refresh-btn,
 .primary-btn {
   background: #2563eb;
-  color: white;
+  color: #ffffff;
 }
 
 .refresh-btn:hover,
@@ -72,9 +96,14 @@
   background: #1d4ed8;
 }
 
+.refresh-btn:active,
+.primary-btn:active {
+  transform: scale(0.97);
+}
+
 .secondary-btn {
   background: #eff6ff;
-  color: #2563eb;
+  color: #1d4ed8;
 }
 
 .secondary-btn:hover {
@@ -83,7 +112,11 @@
 
 .danger-btn {
   background: #dc2626;
-  color: white;
+  color: #ffffff;
+}
+
+.danger-btn:hover {
+  background: #b91c1c;
 }
 
 .primary-btn:disabled {
@@ -91,15 +124,18 @@
   cursor: not-allowed;
 }
 
+/* ===== MAIN CARD ===== */
 .users-card {
-  border-radius: 24px;
+  border-radius: 20px;
   padding: 24px;
 }
 
+/* ===== TOOLBAR ===== */
 .users-toolbar {
   display: grid;
-  grid-template-columns: 1fr 220px;
+  grid-template-columns: 1fr minmax(160px, 220px);
   gap: 12px;
+  align-items: center;
 }
 
 .users-toolbar input,
@@ -108,17 +144,25 @@
 .user-form-grid select,
 .user-form-grid textarea {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #cbd5e1;
   background: #f8fafc;
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 12px;
+  padding: 10px 14px;
   outline: none;
   font-size: 14px;
+  color: #0f172a;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  appearance: auto;
 }
 
 .users-toolbar input,
 .users-toolbar select {
-  min-height: 44px;
+  height: 44px;
+  padding: 0 14px;
+}
+
+.users-toolbar input::placeholder {
+  color: #94a3b8;
 }
 
 .users-toolbar input:focus,
@@ -127,35 +171,42 @@
 .user-form-grid select:focus,
 .user-form-grid textarea:focus {
   border-color: #2563eb;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+/* ===== SUMMARY PILLS ===== */
 .users-summary {
-  margin-top: 16px;
+  margin-top: 14px;
   display: flex;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .users-summary span {
   background: #eff6ff;
-  color: #2563eb;
+  color: #1d4ed8;
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 6px 14px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
+/* ===== TABLE WRAPPER ===== */
 .users-table-wrap {
-  margin-top: 18px;
+  margin-top: 16px;
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
 }
 
+/* ===== TABLE ===== */
 .users-table {
   width: 100%;
-  min-width: 860px;
+  min-width: 760px;
   border-collapse: collapse;
 }
 
@@ -163,68 +214,77 @@
   text-align: left;
   background: #f8fafc;
   color: #64748b;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  padding: 14px;
-  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: 0.06em;
+  padding: 13px 16px;
+  border-bottom: 1.5px solid #e2e8f0;
+  white-space: nowrap;
 }
 
 .users-table td {
-  padding: 14px;
+  padding: 13px 16px;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
   color: #334155;
   font-size: 14px;
 }
 
+.users-table tr:last-child td {
+  border-bottom: none;
+}
+
+.users-table tr:hover td {
+  background: #fafbff;
+}
+
 .users-table td strong {
   display: block;
   color: #0f172a;
   font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .users-table td span {
   display: block;
-  margin-top: 4px;
+  margin-top: 3px;
   color: #64748b;
   font-size: 13px;
 }
 
+/* ===== ROLE BADGE ===== */
 .role-badge {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
   margin-top: 0 !important;
   border-radius: 999px;
-  padding: 7px 11px;
+  padding: 5px 12px;
   font-size: 12px !important;
-  font-weight: 900;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 
-.role-badge.customer {
-  background: #eff6ff;
-  color: #2563eb;
-}
+.role-badge.customer { background: #eff6ff; color: #1d4ed8; }
+.role-badge.staff    { background: #f5f3ff; color: #6d28d9; }
+.role-badge.admin    { background: #ecfdf5; color: #047857; }
 
-.role-badge.staff {
-  background: #f5f3ff;
-  color: #7c3aed;
-}
-
-.role-badge.admin {
-  background: #ecfdf5;
-  color: #059669;
-}
-
+/* ===== USER ACTION BUTTONS ===== */
 .user-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .user-actions button {
-  padding: 9px 14px;
+  padding: 8px 14px;
+  font-size: 13px;
   background: #eff6ff;
-  color: #2563eb;
+  color: #1d4ed8;
+  height: 36px;
 }
 
 .user-actions button:hover {
@@ -240,60 +300,96 @@
   background: #fecaca;
 }
 
+/* ===== EMPTY STATE ===== */
 .empty-users {
   text-align: center;
-  padding: 28px !important;
+  padding: 36px 20px !important;
   color: #94a3b8 !important;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
 }
 
+/* ===== MODAL OVERLAY ===== */
 .user-modal-overlay,
 .confirm-overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(15, 23, 42, 0.48);
+  background: rgba(15, 23, 42, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px;
+  padding: 16px;
+  backdrop-filter: blur(2px);
 }
 
+/* ===== USER MODAL ===== */
 .user-modal {
   width: 100%;
-  max-width: 760px;
-  max-height: 92vh;
-  overflow: auto;
-  border-radius: 24px;
-  padding: 24px;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 20px;
+  padding: 28px;
+  /* scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
+.user-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.user-modal::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+
+/* ===== CONFIRM BOX ===== */
 .confirm-box {
   width: 100%;
-  max-width: 440px;
-  border-radius: 24px;
-  padding: 24px;
+  max-width: 420px;
+  border-radius: 20px;
+  padding: 28px;
 }
 
+/* ===== MODAL HEADER ===== */
 .modal-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
+}
+
+.modal-header h2 {
+  font-size: clamp(18px, 2.5vw, 22px);
 }
 
 .close-modal-btn {
-  width: 42px;
-  height: 42px;
-  border: none;
-  border-radius: 14px;
-  background: #f1f5f9;
-  color: #0f172a;
-  font-size: 26px;
-  cursor: pointer;
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 22px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  line-height: 1;
 }
 
+.close-modal-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* ===== FORM GRID ===== */
 .user-form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -302,10 +398,10 @@
 
 .user-form-grid label {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   color: #334155;
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .user-form-grid label span {
@@ -315,57 +411,103 @@
 .user-form-grid label small {
   color: #dc2626;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
+.user-form-grid textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.6;
+}
+
+/* Field error state */
 .user-form-grid label.field-error input,
 .user-form-grid label.field-error select,
 .user-form-grid label.field-error textarea {
   border-color: #ef4444;
-  background: #fffafa;
+  background: #fff5f5;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
 }
 
 .full {
   grid-column: 1 / -1;
 }
 
+/* ===== MODAL / CONFIRM ACTIONS ===== */
 .modal-actions,
 .confirm-actions {
-  margin-top: 22px;
+  margin-top: 24px;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
 }
 
+/* ===================================================
+   RESPONSIVE — 1024px
+=================================================== */
+@media (max-width: 1024px) {
+  .admin-users-page {
+    padding: 16px;
+  }
+}
+
+/* ===================================================
+   RESPONSIVE — 768px
+=================================================== */
 @media (max-width: 768px) {
+  .admin-users-page {
+    padding: 12px;
+    gap: 14px;
+  }
+
   .users-hero {
     flex-direction: column;
     align-items: stretch;
-    padding: 18px;
-    border-radius: 20px;
+    padding: 18px 20px;
+    border-radius: 16px;
+    gap: 14px;
   }
 
   .users-hero h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .refresh-btn {
     width: 100%;
+    justify-content: center;
+    height: 48px;
   }
 
   .users-card {
-    padding: 18px;
-    border-radius: 20px;
+    padding: 16px;
+    border-radius: 16px;
   }
 
   .users-toolbar {
     grid-template-columns: 1fr;
   }
 
+  /* Table: allow scroll, don't shrink below readable */
+  .users-table {
+    min-width: 600px;
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: 11px 12px;
+  }
+
+  /* Modal */
   .user-modal {
-    padding: 18px;
+    padding: 20px;
     max-height: 94vh;
+    border-radius: 16px;
+  }
+
+  .confirm-box {
+    padding: 20px;
+    border-radius: 16px;
   }
 
   .user-form-grid {
@@ -380,5 +522,25 @@
   .modal-actions button,
   .confirm-actions button {
     width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ===================================================
+   RESPONSIVE — 480px
+=================================================== */
+@media (max-width: 480px) {
+  .user-actions {
+    flex-wrap: wrap;
+  }
+
+  .user-actions button {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+
+  .users-modal-overlay,
+  .confirm-overlay {
+    padding: 10px;
   }
 }

@@ -1,53 +1,39 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
-// Layouts
 import MainLayout from './layouts/MainLayout'
 import AdminLayout from './layouts/AdminLayout'
 
-// Public Pages
 import Home from './pages/Home'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
 import About from './pages/About'
 import Contact from './pages/Contact'
 
-// Auth Pages
 import Login from './pages/Login'
 import Register from './pages/Register'
 import AdminLogin from './pages/AdminLogin'
 
-// User Pages
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import Profile from './pages/Profile'
 import MyOrders from './pages/MyOrders'
 
-// Admin Pages
 import AdminDashboard from './pages/AdminDashboard'
 import AdminProducts from './pages/AdminProducts'
 import AdminOrders from './pages/AdminOrders'
 import AdminUsers from './pages/AdminUsers'
+import AdminProductAttributes from './pages/AdminProductAttributes'
 
-// Auth Helpers
-import {
-  getToken,
-  getUserRole
-} from './services/authService'
+import { getToken, getUserRole } from './services/authService'
 
-/**
- * Route yêu cầu đăng nhập
- */
 function ProtectedRoute({ children, roles = [] }) {
   const token = getToken()
   const role = getUserRole()
 
-  // Chưa đăng nhập
   if (!token) {
     return <Navigate to="/login" replace />
   }
 
-  // Không đúng quyền
   if (roles.length > 0 && !roles.includes(role)) {
     return <Navigate to="/" replace />
   }
@@ -55,20 +41,15 @@ function ProtectedRoute({ children, roles = [] }) {
   return children
 }
 
-/**
- * Route chỉ dành cho khách chưa đăng nhập
- */
 function AuthRoute({ children, admin = false }) {
   const token = getToken()
   const role = getUserRole()
 
   if (token) {
-    // Nếu là admin/staff hoặc đang vào trang admin login
     if (admin || role === 'admin' || role === 'staff') {
       return <Navigate to="/admin" replace />
     }
 
-    // User thường
     return <Navigate to="/" replace />
   }
 
@@ -81,15 +62,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* =========================
-            USER WEBSITE
-        ========================= */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
-
           <Route path="products" element={<Products />} />
           <Route path="products/:id" element={<ProductDetail />} />
-
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
 
@@ -130,9 +106,6 @@ export default function App() {
           />
         </Route>
 
-        {/* =========================
-            AUTH
-        ========================= */}
         <Route
           path="/login"
           element={
@@ -160,9 +133,6 @@ export default function App() {
           }
         />
 
-        {/* =========================
-            ADMIN PANEL
-        ========================= */}
         <Route
           path="/admin"
           element={
@@ -173,6 +143,7 @@ export default function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="products" element={<AdminProducts />} />
+          <Route path="product-attributes" element={<AdminProductAttributes />} />
           <Route path="orders" element={<AdminOrders />} />
 
           <Route
@@ -185,18 +156,11 @@ export default function App() {
           />
         </Route>
 
-        {/* =========================
-            FALLBACK
-        ========================= */}
         <Route
           path="*"
           element={
             <Navigate
-              to={
-                role === 'admin' || role === 'staff'
-                  ? '/admin'
-                  : '/'
-              }
+              to={role === 'admin' || role === 'staff' ? '/admin' : '/'}
               replace
             />
           }

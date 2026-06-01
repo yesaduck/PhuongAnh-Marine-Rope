@@ -1,20 +1,43 @@
+import './Footer.css'
+
 export default function Footer() {
   return (
-    <footer className="bg-brand-900 text-white py-8">
-      <div className="mx-auto max-w-7xl px-4 text-sm">
-        <div className="grid gap-6 md:grid-cols-3">
-          <div>
-            <h2 className="font-semibold">Phương Anh Rope</h2>
-            <p>Chuyên cung cấp dây ngư nghiệp chất lượng cao cho ngư dân và khách hàng sỉ.</p>
+    <footer className="site-footer">
+      <div className="footer-container">
+        <div className="footer-grid">
+          {/* Giới thiệu */}
+          <div className="footer-column">
+            <h2 className="footer-title">Phương Anh Rope</h2>
+            <p className="footer-text">
+              Chuyên cung cấp dây ngư nghiệp chất lượng cao.
+            </p>
           </div>
-          <div>
-            <p>Hotline: <strong>0901 234 567</strong></p>
-            <p>Email: <strong>contact@phuonganhrope.vn</strong></p>
+
+          {/* Liên hệ */}
+          <div className="footer-column">
+            <h3 className="footer-heading">Liên hệ</h3>
+            <p className="footer-text">
+              Hotline: <strong>0901 234 567</strong>
+            </p>
+            <p className="footer-text">
+              Email: <strong>contact@phuonganhrope.vn</strong>
+            </p>
           </div>
-          <div>
-            <p>Địa chỉ: Khu công nghiệp Phương Anh, tỉnh ven biển.</p>
-            <p>© 2026 Phương Anh Rope. All rights reserved.</p>
+
+          {/* Hỗ trợ khách hàng */}
+          <div className="footer-column">
+            <h3 className="footer-heading">Hỗ trợ khách hàng</h3>
+            <a href="/warranty-policy" className="footer-link">
+              Chính sách bảo hành
+            </a>
+            <a href="/shipping-policy" className="footer-link">
+              Chính sách giao hàng
+            </a>
           </div>
+        </div>
+
+        <div className="footer-bottom">
+          © 2026 Phương Anh Rope. All rights reserved.
         </div>
       </div>
     </footer>

@@ -1,0 +1,258 @@
+.contact-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 20px 70px;
+}
+
+.contact-hero {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.contact-hero span {
+  display: inline-block;
+  color: #0f4c81;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.contact-hero h1 {
+  margin-top: 16px;
+  margin-bottom: 14px;
+  font-size: clamp(34px, 5vw, 52px);
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.contact-hero p {
+  max-width: 700px;
+  margin: 0 auto;
+  color: #64748b;
+  line-height: 1.8;
+}
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 24px;
+}
+
+.contact-left {
+  display: grid;
+  gap: 24px;
+}
+
+.contact-info-card,
+.contact-form-card,
+.contact-map-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.05);
+}
+
+.contact-info-card h2,
+.contact-form-card h2,
+.contact-map-card h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.contact-info-list {
+  margin-top: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.contact-info-list > div {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.contact-info-list svg {
+  color: #0f4c81;
+}
+
+.contact-info-list strong {
+  display: block;
+  color: #0f172a;
+}
+
+.contact-info-list span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.contact-form-card form {
+  margin-top: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.input-group input,
+.input-group textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 18px;
+  padding: 14px 16px;
+  outline: none;
+  font-size: 15px;
+}
+
+.input-group input:focus,
+.input-group textarea:focus {
+  border-color: #0f4c81;
+}
+
+.contact-form-card button {
+  height: 52px;
+  border: none;
+  border-radius: 18px;
+  background: #0f4c81;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.contact-form-card button:hover {
+  background: #0c3f6b;
+}
+
+.contact-form-card button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.contact-error {
+  margin: 10px 0 0;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.success-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.success-modal {
+  width: 90%;
+  max-width: 420px;
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  text-align: center;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: auto;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 36px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-modal h3 {
+  margin-top: 20px;
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.success-modal p {
+  margin-top: 12px;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.success-modal button {
+  margin-top: 24px;
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 14px;
+  background: #0f4c81;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.map-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.map-header svg {
+  color: #0f4c81;
+}
+
+.contact-map-card iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 550px;
+  border: none;
+  border-radius: 20px;
+}
+
+@media (max-width: 992px) {
+  .contact-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-map-card iframe {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-page {
+    padding: 24px 14px 40px;
+  }
+
+  .contact-info-card,
+  .contact-form-card,
+  .contact-map-card {
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .contact-hero h1 {
+    font-size: 34px;
+  }
+
+  .contact-map-card iframe {
+    min-height: 320px;
+  }
+}

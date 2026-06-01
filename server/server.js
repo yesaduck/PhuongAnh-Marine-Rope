@@ -10,6 +10,8 @@ import productRoutes from './routes/productRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import uploadRoutes from './routes/uploadRoutes.js'
+import productAttributeRoutes from './routes/productAttributeRoutes.js'
+import contactRoutes from './routes/contactRoutes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -19,7 +21,7 @@ dotenv.config({
 })
 
 const app = express()
-
+const PORT = Number(process.env.PORT) || 5002
 const uploadsDir = path.join(__dirname, 'uploads')
 
 if (!fs.existsSync(uploadsDir)) {
@@ -45,13 +47,15 @@ app.use('/api/orders', orderRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/uploads', uploadRoutes)
+app.use('/api/product-attributes', productAttributeRoutes)
+app.use('/api/contact', contactRoutes)
 
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     message: 'Server is running',
     time: new Date().toISOString(),
-    port: process.env.PORT || 5002
+    port: PORT
   })
 })
 
@@ -72,8 +76,6 @@ app.use((err, req, res, next) => {
     error: err.message || 'Lỗi máy chủ nội bộ.'
   })
 })
-
-const PORT = Number(process.env.PORT) || 5002
 
 const server = app.listen(PORT, () => {
   console.log(`Server chạy tại: http://localhost:${PORT}`)

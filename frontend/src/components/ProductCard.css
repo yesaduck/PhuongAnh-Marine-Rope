@@ -79,6 +79,10 @@
   color: #0f4c81;
 }
 
+.product-card-price {
+  white-space: nowrap;
+}
+
 .product-card-footer a {
   display: inline-flex;
   align-items: center;

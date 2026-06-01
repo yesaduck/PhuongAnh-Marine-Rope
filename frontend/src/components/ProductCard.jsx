@@ -34,9 +34,13 @@ export default function ProductCard({ product }) {
   const images = normalizeImages(product.images)
   const imageUrl = getImageUrl(images[0])
   const priceLabel =
-    product.price > 0
-      ? `${Number(product.price).toLocaleString('vi-VN')} đ`
-      : 'Liên hệ'
+    product.price > 0 ? (
+      <p className="product-card-price">
+        {Number(product.price || 0).toLocaleString('vi-VN')} đ
+      </p>
+    ) : (
+      <p className="product-card-price">Liên hệ</p>
+    )
 
   return (
     <article className="product-card">
@@ -64,7 +68,7 @@ export default function ProductCard({ product }) {
         <p>Chất liệu: {product.material || 'Đang cập nhật'}</p>
 
         <div className="product-card-footer">
-          <span>{priceLabel}</span>
+          {priceLabel}
 
           <Link to={`/products/${product.id}`}>
             Mua ngay

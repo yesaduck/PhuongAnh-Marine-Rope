@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Anchor, ShieldCheck, Truck, Waves } from 'lucide-react'
+import { Anchor, ShieldCheck, Truck } from 'lucide-react'
 import { fetchProducts } from '../services/productService'
 import ProductCard from '../components/ProductCard'
 import './Home.css'
+
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5002'
 
 const highlightCategories = [
   'Dây neo tàu',
@@ -69,19 +71,11 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="home-hero-image">
+            <div className="home-hero-image">
             <img
-              src="https://images.unsplash.com/photo-1517976487492-5750f3195933?auto=format&fit=crop&w=900&q=80"
+              src={`${API_ORIGIN}/uploads/Capture.PNG`}
               alt="Banner dây ngư nghiệp"
             />
-
-            <div className="home-floating-card">
-              <Waves size={22} />
-              <div>
-                <strong>Dây ngư nghiệp bền bỉ</strong>
-                <span>Chống mài mòn, chịu tải tốt</span>
-              </div>
-            </div>
           </div>
         </div>
       </section>

@@ -8,7 +8,8 @@ import {
   LogOut,
   Fish,
   Menu,
-  X
+  X,
+  SlidersHorizontal
 } from 'lucide-react'
 import { logout } from '../services/authService'
 import './AdminLayout.css'
@@ -47,6 +48,11 @@ export default function AdminLayout() {
       to: '/admin/products',
       label: 'Sản phẩm',
       icon: <Package size={19} />
+    },
+    {
+      to: '/admin/product-attributes',
+      label: 'Thuộc tính',
+      icon: <SlidersHorizontal size={19} />
     },
     {
       to: '/admin/orders',
@@ -100,7 +106,9 @@ export default function AdminLayout() {
               key={item.to}
               to={item.to}
               onClick={closeMobileMenu}
-              className={`admin-sidebar-link ${isActive(item.to) ? 'active' : ''}`}
+              className={`admin-sidebar-link ${
+                isActive(item.to) ? 'active' : ''
+              }`}
               title={collapsed ? item.label : undefined}
             >
               {item.icon}
@@ -138,7 +146,7 @@ export default function AdminLayout() {
 
             <div>
               <h1>Trang quản trị</h1>
-              <p>Quản lý sản phẩm, đơn hàng và khách hàng.</p>
+              <p>Quản lý sản phẩm, thuộc tính, đơn hàng và khách hàng.</p>
             </div>
           </div>
         </header>

@@ -1,67 +1,195 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import toast, { Toaster } from 'react-hot-toast'
 import { fetchMyOrders } from '../services/orderService'
+import { addItem, clearCart } from '../services/cartService'
+import './MyOrders.css'
+
+const statusText = {
+  pending: 'Chờ xử lý',
+  confirmed: 'Đã xác nhận',
+  shipping: 'Đang giao',
+  completed: 'Hoàn thành',
+  cancelled: 'Đã hủy'
+}
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    const loadOrders = async () => {
-      const data = await fetchMyOrders()
-      setOrders(data)
-    }
     loadOrders()
   }, [])
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      confirmed: 'bg-blue-100 text-blue-800',
-      shipping: 'bg-purple-100 text-purple-800',
-      completed: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800'
+  async function loadOrders() {
+    try {
+      setLoading(true)
+      const data = await fetchMyOrders()
+      setOrders(Array.isArray(data) ? data : [])
+    } catch {
+      toast.error('Không thể tải lịch sử đơn hàng.')
+    } finally {
+      setLoading(false)
     }
-    return colors[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  function normalizeImages(images) {
+    if (!images) return []
+
+    if (Array.isArray(images)) return images
+
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images)
+        return Array.isArray(parsed) ? parsed : [images]
+      } catch {
+        return images.split(',').map((i) => i.trim()).filter(Boolean)
+      }
+    }
+
+    return []
+  }
+
+  function handleReorder(order) {
+    try {
+      const items = order.items || []
+
+      if (!items.length) {
+        toast.error('Đơn hàng này không có sản phẩm để đặt lại.')
+        return
+      }
+
+      clearCart()
+
+      items.forEach((item) => {
+        const productId = item.product_id || item.productId
+
+        if (!productId) return
+
+        const images = normalizeImages(item.product_images || item.image)
+
+        const product = {
+          id: productId,
+          name: item.product_name || item.name || `Sản phẩm #${productId}`,
+          images
+        }
+
+        const selectedVariant = {
+          id:
+            item.variant_id ||
+            item.variantId ||
+            item.product_variant_id ||
+            `${productId}_${item.size || 'default'}_${item.material || 'default'}`,
+          category: item.category || '',
+          size: item.size || '',
+          material: item.material || '',
+          weight_kg: item.weight_kg || 0,
+          unit: item.unit || 'cuộn',
+          price: Number(item.price || 0),
+          stock: item.stock || 9999,
+          image: images[0] || ''
+        }
+
+        addItem(product, selectedVariant, Number(item.quantity || 1))
+      })
+
+      toast.success('Đã thêm lại sản phẩm vào giỏ hàng.')
+
+      setTimeout(() => {
+        navigate('/cart')
+      }, 700)
+    } catch (error) {
+      toast.error(error.message || 'Không thể đặt lại đơn này.')
+    }
+  }
+
+  if (loading) {
+    return <div className="my-orders-loading">Đang tải đơn hàng...</div>
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-20">
-      <div className="mx-auto w-full max-w-4xl rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
-        <h1 className="text-3xl font-semibold text-slate-900">Đơn hàng của tôi</h1>
-        <p className="mt-2 text-slate-600">Lịch sử đơn hàng và trạng thái giao hàng.</p>
+    <div className="my-orders-page">
+      <Toaster position="top-right" />
 
-        {orders.length === 0 ? (
-          <div className="mt-8 text-center text-slate-500">Bạn chưa có đơn hàng nào.</div>
-        ) : (
-          <div className="mt-8 space-y-6">
-            {orders.map((order) => (
-              <div key={order.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-lg font-semibold text-slate-900">Đơn hàng #{order.id}</p>
-                    <p className="text-sm text-slate-600">{new Date(order.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`rounded-full px-3 py-1 text-sm font-semibold ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                    <span className="text-lg font-bold text-brand-900">{Number(order.total_price).toLocaleString()} đ</span>
-                  </div>
-                </div>
-                <div className="mt-4 rounded-2xl bg-white p-4">
-                  <p className="text-sm font-semibold text-slate-900">Chi tiết sản phẩm</p>
-                  <ul className="mt-3 space-y-2">
-                    {order.items.map((item, idx) => (
-                      <li key={idx} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                        <span className="text-sm text-slate-700">Sản phẩm ID: {item.product_id}</span>
-                        <span className="text-sm font-semibold text-slate-900">{item.quantity} x {Number(item.price).toLocaleString()} đ</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
+      <div className="my-orders-container">
+        <button type="button" className="my-orders-back" onClick={() => navigate(-1)}>
+          ← Quay lại
+        </button>
+
+        <section className="my-orders-card">
+          <div className="my-orders-header">
+            <div>
+              <span className="my-orders-badge">Lịch sử</span>
+              <h1>Đơn hàng của tôi</h1>
+              <p>Theo dõi trạng thái giao hàng và đặt lại đơn cũ nhanh chóng.</p>
+            </div>
+
+            <button type="button" className="my-orders-refresh" onClick={loadOrders}>
+              Làm mới
+            </button>
           </div>
-        )}
+
+          {orders.length === 0 ? (
+            <div className="my-orders-empty">
+              <h2>Bạn chưa có đơn hàng nào</h2>
+              <p>Hãy chọn sản phẩm phù hợp để bắt đầu đặt hàng.</p>
+              <button onClick={() => navigate('/products')}>Mua sản phẩm</button>
+            </div>
+          ) : (
+            <div className="my-orders-list">
+              {orders.map((order) => (
+                <article key={order.id} className="my-order-item">
+                  <div className="my-order-top">
+                    <div>
+                      <h2>Đơn hàng #{order.id}</h2>
+                      <p>
+                        {order.created_at
+                          ? new Date(order.created_at).toLocaleDateString('vi-VN')
+                          : 'Không rõ ngày'}
+                      </p>
+                    </div>
+
+                    <div className="my-order-summary">
+                      <span className={`order-status ${order.status}`}>
+                        {statusText[order.status] || order.status}
+                      </span>
+
+                      <strong>
+                        {Number(order.total_price || 0).toLocaleString('vi-VN')} đ
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="my-order-products">
+                    <h3>Sản phẩm đã đặt</h3>
+
+                    <ul>
+                      {(order.items || []).map((item, idx) => (
+                        <li key={idx}>
+                          <span>
+                            {item.product_name || `Sản phẩm #${item.product_id}`}
+                          </span>
+
+                          <strong>
+                            {item.quantity} x{' '}
+                            {Number(item.price || 0).toLocaleString('vi-VN')} đ
+                          </strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="my-order-actions">
+                    <button type="button" onClick={() => handleReorder(order)}>
+                      Đặt lại đơn này
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

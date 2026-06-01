@@ -15,7 +15,7 @@ export default function About() {
 
         <div className="about-hero-image">
           <img
-            src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80"
+            src="http://localhost:5002/uploads/about.PNG"
             alt="Xưởng sản xuất dây ngư nghiệp"
           />
         </div>

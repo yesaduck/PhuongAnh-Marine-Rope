@@ -1,27 +1,203 @@
+import { useState } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
+import { Phone, Mail, MapPin, Send, MessageSquare, Loader2 } from 'lucide-react'
+import { sendContact } from '../services/contactService'
+import './Contact.css'
+
 export default function Contact() {
+  const [form, setForm] = useState({
+    full_name: '',
+    email: '',
+    message: ''
+  })
+
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [successModal, setSuccessModal] = useState(false)
+
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }))
+
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: '' }))
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+
+    if (!form.full_name.trim()) {
+      newErrors.full_name = 'Vui lòng nhập họ tên'
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = 'Vui lòng nhập email'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = 'Email không hợp lệ'
+    }
+
+    if (!form.message.trim()) {
+      newErrors.message = 'Vui lòng nhập nội dung'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!validateForm()) {
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      await sendContact({
+        full_name: form.full_name.trim(),
+        email: form.email.trim(),
+        message: form.message.trim()
+      })
+
+      toast.success('Gửi liên hệ thành công. Chúng tôi sẽ phản hồi sớm.')
+      setSuccessModal(true)
+
+      setForm({
+        full_name: '',
+        email: '',
+        message: ''
+      })
+      setErrors({})
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Gửi liên hệ thất bại.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 space-y-10">
-      <div className="grid gap-8 lg:grid-cols-[0.9fr_0.8fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h1 className="text-3xl font-semibold text-slate-900">Liên hệ</h1>
-          <p className="mt-3 text-slate-600">Gửi yêu cầu báo giá hoặc đặt hàng dây ngư nghiệp cho xưởng Phương Anh.</p>
-          <div className="mt-8 space-y-6">
-            <p><strong>Hotline:</strong> 0901 234 567</p>
-            <p><strong>Email:</strong> contact@phuonganhrope.vn</p>
-            <p><strong>Địa chỉ:</strong> Khu công nghiệp Phương Anh, tỉnh ven biển.</p>
+    <div className="contact-page">
+      <Toaster position="top-right" />
+      <section className="contact-hero">
+        <span>Liên hệ</span>
+
+        <h1>Liên hệ với Phương Anh Rope</h1>
+
+        <p>
+          Chúng tôi hỗ trợ tư vấn sản phẩm, báo giá và nhận đơn hàng
+          nhanh chóng trên toàn quốc.
+        </p>
+      </section>
+
+      <section className="contact-layout">
+        <div className="contact-left">
+          <div className="contact-info-card">
+            <h2>Thông tin liên hệ</h2>
+
+            <div className="contact-info-list">
+              <div>
+                <Phone size={20} />
+                <div>
+                  <strong>Hotline</strong>
+                  <span>0901 234 567</span>
+                </div>
+              </div>
+
+              <div>
+                <Mail size={20} />
+                <div>
+                  <strong>Email</strong>
+                  <span>contact@phuonganhrope.vn</span>
+                </div>
+              </div>
+
+              <div>
+                <MapPin size={20} />
+                <div>
+                  <strong>Địa chỉ</strong>
+                  <span>Khu công nghiệp Phương Anh, tỉnh ven biển</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <form className="mt-8 space-y-4">
-            <input type="text" placeholder="Họ tên" className="w-full rounded-3xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-700" />
-            <input type="email" placeholder="Email" className="w-full rounded-3xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-700" />
-            <textarea placeholder="Nội dung liên hệ" rows="5" className="w-full rounded-3xl border border-slate-300 px-4 py-3 outline-none focus:border-brand-700" />
-            <button type="button" className="rounded-3xl bg-brand-900 px-6 py-3 text-sm font-semibold text-white">Gửi tin nhắn</button>
-          </form>
+
+          <div className="contact-form-card">
+            <h2>Gửi yêu cầu</h2>
+
+            <form onSubmit={handleSubmit}>
+              <div className="input-group">
+                <input
+                  type="text"
+                  placeholder="Họ và tên"
+                  value={form.full_name}
+                  onChange={(e) => handleChange('full_name', e.target.value)}
+                />
+                {errors.full_name && <p className="contact-error">{errors.full_name}</p>}
+              </div>
+
+              <div className="input-group">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                />
+                {errors.email && <p className="contact-error">{errors.email}</p>}
+              </div>
+
+              <div className="input-group">
+                <textarea
+                  rows="5"
+                  placeholder="Nội dung liên hệ..."
+                  value={form.message}
+                  onChange={(e) => handleChange('message', e.target.value)}
+                />
+                {errors.message && <p className="contact-error">{errors.message}</p>}
+              </div>
+
+              <button type="submit" disabled={loading}>
+                {loading ? <Loader2 className="spin" size={18} /> : <Send size={18} />}
+                {loading ? 'Đang gửi...' : 'Gửi tin nhắn'}
+              </button>
+            </form>
+          </div>
         </div>
 
-        <div className="rounded-3xl overflow-hidden shadow-sm">
-          <iframe title="Google Maps" width="100%" height="100%" className="min-h-[420px]" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.6620786908475!2d106.629722!3d10.823098!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f1b0b8d2b5f%3A0xa7e61af24c7cb55c!2zSOG7kyBuaMOgIEjhqG4gQW5o!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s" allowFullScreen loading="lazy"></iframe>
+        <div className="contact-map-card">
+          <div className="map-header">
+            <MessageSquare size={20} />
+            <h2>Vị trí cửa hàng</h2>
+          </div>
+
+          <iframe
+            title="Google Maps"
+            width="100%"
+            height="100%"
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            src="https://maps.google.com/maps?q=10.823098,106.629722&z=15&output=embed"
+          />
         </div>
-      </div>
+      </section>
+
+      {successModal && (
+        <div className="success-overlay">
+          <div className="success-modal">
+            <div className="success-icon">✓</div>
+
+            <h3>Gửi thành công</h3>
+
+            <p>
+              Cảm ơn bạn đã liên hệ với Phương Anh Rope.
+              Chúng tôi sẽ phản hồi trong thời gian sớm nhất.
+            </p>
+
+            <button onClick={() => setSuccessModal(false)}>Đóng</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

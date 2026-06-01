@@ -7,38 +7,30 @@ import {
   fetchProducts,
   updateProduct
 } from '../services/productService'
+import { fetchProductAttributes } from '../services/productAttributeService'
 import './AdminProducts.css'
 
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5002'
 const ITEMS_PER_PAGE = 10
+const PRICE_PER_KG = 100000
 
 const emptyForm = {
   name: '',
   description: '',
   category: '',
-  price: '',
+  price: 0,
   size: '',
   material: '',
+  weight_kg: '',
+  unit: 'cuộn',
   stock: '',
   images: [],
   imageFiles: [],
   imagePreviews: []
 }
 
-const categories = [
-  'Dây thừng',
-  'Dây neo',
-  'Dây lưới',
-  'Dây dù',
-  'Dây PP',
-  'Dây PE',
-  'Phụ kiện ngư nghiệp',
-  'Khác'
-]
-
 function normalizeImages(images) {
   if (!images) return []
-
   if (Array.isArray(images)) return images
 
   if (typeof images === 'string') {
@@ -56,24 +48,62 @@ function normalizeImages(images) {
   return []
 }
 
-function getImageUrl(src) {
+function normalizeSizeValue(value) {
+  if (value === null || value === undefined || value === '') return ''
+
+  const number = Number(value)
+
+  if (!Number.isNaN(number)) {
+    return Number.isInteger(number) ? String(number) : String(number)
+  }
+
+  return String(value)
+}
+
+function getImageUrl(src, version = '') {
   if (!src) return ''
   if (src.startsWith('blob:')) return src
   if (src.startsWith('http')) return src
-  return `${API_ORIGIN}${src}`
+
+  return `${API_ORIGIN}${src}?v=${version}`
+}
+
+function calculatePrice(weightKg) {
+  return Number(weightKg || 0) * PRICE_PER_KG
+}
+
+function formatMoney(value) {
+  return `${Number(value || 0).toLocaleString('vi-VN')} đ`
+}
+
+function splitAttributes(items = []) {
+  return {
+    categories: items.filter((item) => item.type === 'category'),
+    sizes: items.filter((item) => item.type === 'size'),
+    materials: items.filter((item) => item.type === 'material')
+  }
 }
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([])
+  const [attributes, setAttributes] = useState({
+    categories: [],
+    sizes: [],
+    materials: []
+  })
+
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [selectedIds, setSelectedIds] = useState([])
+  const [imageVersion, setImageVersion] = useState(Date.now())
+
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [stockFilter, setStockFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+
   const [loading, setLoading] = useState(false)
   const [formErrors, setFormErrors] = useState({})
 
@@ -81,7 +111,7 @@ export default function AdminProducts() {
   const excelInputRef = useRef(null)
 
   useEffect(() => {
-    loadProducts()
+    loadInitialData()
   }, [])
 
   useEffect(() => {
@@ -89,8 +119,9 @@ export default function AdminProducts() {
   }, [search, categoryFilter, stockFilter])
 
   const filteredProducts = useMemo(() => {
+    const keyword = search.toLowerCase().trim()
+
     return products.filter((product) => {
-      const keyword = search.toLowerCase().trim()
       const name = product.name?.toLowerCase() || ''
       const category = product.category?.toLowerCase() || ''
       const material = product.material?.toLowerCase() || ''
@@ -114,7 +145,10 @@ export default function AdminProducts() {
     })
   }, [products, search, categoryFilter, stockFilter])
 
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE))
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
+  )
 
   const currentProducts = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE
@@ -123,17 +157,24 @@ export default function AdminProducts() {
 
   const allFilteredIds = filteredProducts.map((item) => item.id)
   const selectedAllFiltered =
-    allFilteredIds.length > 0 && allFilteredIds.every((id) => selectedIds.includes(id))
+    allFilteredIds.length > 0 &&
+    allFilteredIds.every((id) => selectedIds.includes(id))
+
+  async function loadInitialData() {
+    await Promise.all([loadProducts(), loadAttributes()])
+  }
 
   async function loadProducts() {
     try {
       setLoading(true)
+
       const data = await fetchProducts({ limit: 999 })
       const list = data.items || data || []
 
       setProducts(
         list.map((item) => ({
           ...item,
+          size: normalizeSizeValue(item.size),
           images: normalizeImages(item.images)
         }))
       )
@@ -144,26 +185,44 @@ export default function AdminProducts() {
     }
   }
 
+  async function loadAttributes() {
+    try {
+      const data = await fetchProductAttributes()
+      setAttributes(splitAttributes(data))
+    } catch {
+      toast.error('Không thể tải danh mục, kích thước, chất liệu.')
+    }
+  }
+
   function openCreateModal() {
     setForm(emptyForm)
     setEditingId(null)
+    setFormErrors({})
     setModalOpen(true)
   }
 
   function openEditModal(product) {
     setEditingId(product.id)
+    setFormErrors({})
+
+    const sizeValue = normalizeSizeValue(product.size)
+    const weightKg = Number(product.weight_kg || 0)
+
     setForm({
       name: product.name || '',
       description: product.description || '',
       category: product.category || '',
-      price: product.price ?? '',
-      size: product.size || '',
+      price: Number(product.price || calculatePrice(weightKg)),
+      size: sizeValue,
       material: product.material || '',
+      weight_kg: product.weight_kg ?? '',
+      unit: product.unit || 'cuộn',
       stock: product.stock ?? '',
       images: normalizeImages(product.images),
       imageFiles: [],
       imagePreviews: []
     })
+
     setModalOpen(true)
   }
 
@@ -171,14 +230,30 @@ export default function AdminProducts() {
     setModalOpen(false)
     setEditingId(null)
     setForm(emptyForm)
-    if (imageInputRef.current) imageInputRef.current.value = ''
+    setFormErrors({})
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = ''
+    }
   }
 
   function handleChange(field, value) {
-    setForm((prev) => ({
-      ...prev,
-      [field]: value
-    }))
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [field]: value
+      }
+
+      if (field === 'weight_kg') {
+        next.price = calculatePrice(value)
+      }
+
+      if (field === 'size') {
+        next.size = normalizeSizeValue(value)
+      }
+
+      return next
+    })
 
     setFormErrors((prev) => ({
       ...prev,
@@ -190,27 +265,27 @@ export default function AdminProducts() {
     const errors = {}
 
     if (!form.name.trim()) {
-      errors.name = 'Chưa nhập tên sản phẩm kìa. Nhập tên để khách còn biết đang mua gì.'
+      errors.name = 'Vui lòng nhập tên sản phẩm.'
     }
 
     if (!form.category.trim()) {
-      errors.category = 'Chưa chọn danh mục. Sản phẩm phải có nhóm để dễ lọc.'
+      errors.category = 'Vui lòng chọn danh mục.'
     }
 
-    if (form.price === '' || Number(form.price) <= 0) {
-      errors.price = 'Giá bán chưa hợp lệ. Không thể để trống hoặc bằng 0.'
-    }
-
-    if (form.stock === '' || Number(form.stock) < 0) {
-      errors.stock = 'Tồn kho sai rồi. Nhập số lượng từ 0 trở lên.'
-    }
-
-    if (!form.size.trim()) {
-      errors.size = 'Chưa nhập kích thước. Ví dụ: 8mm, 10mm, 100m/cuộn.'
+    if (!form.size.toString().trim()) {
+      errors.size = 'Vui lòng chọn kích thước.'
     }
 
     if (!form.material.trim()) {
-      errors.material = 'Chưa nhập chất liệu. Ví dụ: PP, PE, Nylon.'
+      errors.material = 'Vui lòng chọn chất liệu.'
+    }
+
+    if (form.weight_kg === '' || Number(form.weight_kg) <= 0) {
+      errors.weight_kg = 'Vui lòng nhập trọng lượng 1 cuộn theo kg.'
+    }
+
+    if (form.stock === '' || Number(form.stock) < 0) {
+      errors.stock = 'Tồn kho phải từ 0 trở lên.'
     }
 
     setFormErrors(errors)
@@ -221,39 +296,73 @@ export default function AdminProducts() {
     return Object.keys(errors).length === 0
   }
 
+  function buildPayload() {
+    const weightKg = Number(form.weight_kg || 0)
+    const sizeValue = normalizeSizeValue(form.size)
+
+    const variant = {
+      category: form.category.trim(),
+      size: sizeValue,
+      material: form.material.trim(),
+      weight_kg: weightKg,
+      unit: 'cuộn',
+      price: calculatePrice(weightKg),
+      stock: Number(form.stock || 0)
+    }
+
+    return {
+      name: form.name.trim(),
+      description: form.description.trim(),
+
+      category: variant.category,
+      size: variant.size,
+      material: variant.material,
+      weight_kg: variant.weight_kg,
+      unit: variant.unit,
+      price: variant.price,
+      stock: variant.stock,
+
+      variants: [variant],
+
+      images: form.imageFiles.length > 0 ? [] : form.images || [],
+      imageFiles: form.imageFiles || []
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
 
-    if (!validateForm()) {
-      return
-    }
-
-    const payload = {
-      ...form,
-      name: form.name.trim(),
-      description: form.description.trim(),
-      category: form.category.trim(),
-      price: Number(form.price || 1),
-      stock: Number(form.stock || 0),
-      size: form.size.trim(),
-      material: form.material.trim(),
-      images: form.images || [],
-      imageFiles: form.imageFiles || []
-    }
+    if (!validateForm()) return
 
     try {
       setLoading(true)
 
+      const payload = buildPayload()
+      let savedProduct
+
       if (editingId) {
-        await updateProduct(editingId, payload)
+        savedProduct = await updateProduct(editingId, payload)
+        await loadProducts()
+        setImageVersion(Date.now())
+        closeModal()
+
         toast.success('Cập nhật sản phẩm thành công.')
       } else {
-        await createProduct(payload)
+        savedProduct = await createProduct(payload)
+
+        setProducts((prev) => [
+          {
+            ...savedProduct,
+            size: normalizeSizeValue(savedProduct.size),
+            images: normalizeImages(savedProduct.images)
+          },
+          ...prev
+        ])
+
+        setImageVersion(Date.now())
+        closeModal()
         toast.success('Thêm sản phẩm thành công.')
       }
-
-      closeModal()
-      await loadProducts()
     } catch (err) {
       toast.error(err.response?.data?.error || 'Lưu sản phẩm thất bại.')
     } finally {
@@ -291,16 +400,21 @@ export default function AdminProducts() {
 
   function toggleSelect(id) {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((item) => item !== id)
+        : [...prev, id]
     )
   }
 
   function toggleSelectAllFiltered() {
     if (selectedAllFiltered) {
-      setSelectedIds((prev) => prev.filter((id) => !allFilteredIds.includes(id)))
-    } else {
-      setSelectedIds((prev) => [...new Set([...prev, ...allFilteredIds])])
+      setSelectedIds((prev) =>
+        prev.filter((id) => !allFilteredIds.includes(id))
+      )
+      return
     }
+
+    setSelectedIds((prev) => [...new Set([...prev, ...allFilteredIds])])
   }
 
   async function confirmDeleteProducts() {
@@ -329,9 +443,11 @@ export default function AdminProducts() {
     const rows = filteredProducts.map((item) => ({
       name: item.name,
       category: item.category,
-      price: item.price,
       size: item.size,
       material: item.material,
+      weight_kg: item.weight_kg,
+      unit: item.unit || 'cuộn',
+      price: item.price,
       stock: item.stock,
       description: item.description,
       images: normalizeImages(item.images).join(',')
@@ -339,6 +455,7 @@ export default function AdminProducts() {
 
     const worksheet = XLSX.utils.json_to_sheet(rows)
     const workbook = XLSX.utils.book_new()
+
     XLSX.utils.book_append_sheet(workbook, worksheet, 'SanPham')
     XLSX.writeFile(workbook, 'san-pham-phuong-anh-rope.xlsx')
   }
@@ -359,22 +476,38 @@ export default function AdminProducts() {
       let failed = 0
 
       for (const row of rows) {
+        const weightKg = Number(row.weight_kg || row['Trọng lượng kg'] || 1)
+        const sizeValue = normalizeSizeValue(row.size || row['Kích thước'] || '')
+
+        const variant = {
+          category: row.category || row['Danh mục'] || '',
+          size: sizeValue,
+          material: row.material || row['Chất liệu'] || '',
+          weight_kg: weightKg,
+          unit: 'cuộn',
+          price: calculatePrice(weightKg),
+          stock: Number(row.stock || row['Tồn kho'] || 0)
+        }
+
         const payload = {
           name: row.name || row['Tên sản phẩm'] || '',
-          category: row.category || row['Danh mục'] || 'Khác',
-          price: Number(row.price || row['Giá bán'] || 1),
-          size: row.size || row['Kích thước'] || '',
-          material: row.material || row['Chất liệu'] || '',
-          stock: Number(row.stock || row['Tồn kho'] || 0),
+          category: variant.category,
+          size: variant.size,
+          material: variant.material,
+          weight_kg: variant.weight_kg,
+          unit: variant.unit,
+          price: variant.price,
+          stock: variant.stock,
           description: row.description || row['Mô tả'] || '',
           images: String(row.images || row['Hình ảnh'] || '')
             .split(',')
             .map((url) => url.trim())
             .filter(Boolean),
-          imageFiles: []
+          imageFiles: [],
+          variants: [variant]
         }
 
-        if (!payload.name) {
+        if (!payload.name || !payload.category || !payload.size || !payload.material) {
           failed++
           continue
         }
@@ -402,17 +535,23 @@ export default function AdminProducts() {
     const start = Math.max(1, currentPage - 2)
     const end = Math.min(totalPages, currentPage + 2)
 
-    for (let i = start; i <= end; i++) pages.push(i)
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+
     return pages
   }
 
   return (
     <div className="admin-products-page">
       <Toaster position="top-right" />
+
       <section className="admin-products-hero">
         <div>
           <h1>Quản lý sản phẩm</h1>
-          <p>Thêm, chỉnh sửa, xóa, import và export sản phẩm dây ngư nghiệp.</p>
+          <p>
+            Sản phẩm bán theo cuộn. Giá tự tính theo trọng lượng: 1kg = 100.000đ.
+          </p>
         </div>
 
         <div className="admin-products-actions">
@@ -420,7 +559,11 @@ export default function AdminProducts() {
             + Thêm sản phẩm
           </button>
 
-          <button type="button" className="secondary-btn" onClick={() => excelInputRef.current?.click()}>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() => excelInputRef.current?.click()}
+          >
             Import Excel
           </button>
 
@@ -464,16 +607,22 @@ export default function AdminProducts() {
             placeholder="Tìm theo tên, danh mục, chất liệu..."
           />
 
-          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
             <option value="">Tất cả danh mục</option>
-            {categories.map((item) => (
-              <option key={item} value={item}>
-                {item}
+            {attributes.categories.map((item) => (
+              <option key={item.id} value={item.name}>
+                {item.name}
               </option>
             ))}
           </select>
 
-          <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
+          <select
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value)}
+          >
             <option value="">Tất cả tồn kho</option>
             <option value="in-stock">Còn hàng</option>
             <option value="out-stock">Hết hàng</option>
@@ -515,17 +664,17 @@ export default function AdminProducts() {
                     </td>
 
                     <td>
-                      {firstImage ? (
+                      {firstImage && (
                         <img
                           className="table-img"
-                          src={getImageUrl(firstImage)}
+                          src={getImageUrl(firstImage, imageVersion)}
                           alt={product.name}
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             e.currentTarget.nextSibling.style.display = 'flex'
                           }}
                         />
-                      ) : null}
+                      )}
 
                       <div
                         className="empty-img"
@@ -538,17 +687,21 @@ export default function AdminProducts() {
                     <td>
                       <strong>{product.name}</strong>
                       <span>
-                        {product.size || 'Chưa có size'} • {product.material || 'Chưa có chất liệu'}
+                        {product.size || 0}m • {product.material || 'Chưa có chất liệu'} •{' '}
+                        {product.weight_kg || 0}kg/cuộn
                       </span>
                     </td>
 
                     <td>{product.category}</td>
-                    <td>{Number(product.price || 0).toLocaleString('vi-VN')} đ</td>
-                    <td>{product.stock}</td>
+                    <td>{formatMoney(product.price)} / cuộn</td>
+                    <td>{product.stock} cuộn</td>
 
                     <td>
                       <div className="table-actions">
-                        <button type="button" onClick={() => openEditModal(product)}>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(product)}
+                        >
                           Sửa
                         </button>
 
@@ -581,7 +734,10 @@ export default function AdminProducts() {
             Đầu
           </button>
 
-          <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          >
             Trước
           </button>
 
@@ -599,11 +755,17 @@ export default function AdminProducts() {
 
           {currentPage < totalPages - 2 && <span>...</span>}
 
-          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}>
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          >
             Sau
           </button>
 
-          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)}>
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(totalPages)}
+          >
             Cuối
           </button>
         </div>
@@ -615,10 +777,16 @@ export default function AdminProducts() {
             <div className="modal-header">
               <div>
                 <h2>{editingId ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm'}</h2>
-                <p>Khung thao tác nhanh, dễ dùng trên PC và mobile.</p>
+                <p>
+                  Chọn thuộc tính đã cài sẵn. Giá tự tính theo trọng lượng cuộn.
+                </p>
               </div>
 
-              <button type="button" className="close-modal-btn" onClick={closeModal}>
+              <button
+                type="button"
+                className="close-modal-btn"
+                onClick={closeModal}
+              >
                 ×
               </button>
             </div>
@@ -630,7 +798,7 @@ export default function AdminProducts() {
                   required
                   value={form.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  placeholder="Ví dụ: Dây PP xanh 8mm"
+                  placeholder="Ví dụ: Dây PP xanh 100m"
                 />
                 {formErrors.name && <small>{formErrors.name}</small>}
               </label>
@@ -643,52 +811,86 @@ export default function AdminProducts() {
                   onChange={(e) => handleChange('category', e.target.value)}
                 >
                   <option value="">Chọn danh mục</option>
-                  {categories.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
+                  {attributes.categories.map((item) => (
+                    <option key={item.id} value={item.name}>
+                      {item.name}
                     </option>
                   ))}
                 </select>
+                {formErrors.category && <small>{formErrors.category}</small>}
               </label>
 
-              <label className={formErrors.price ? 'field-error' : ''}>
-                Giá bán
+              <label className={formErrors.size ? 'field-error' : ''}>
+                Kích thước mét <span>*</span>
+                <select
+                  required
+                  value={form.size}
+                  onChange={(e) => handleChange('size', e.target.value)}
+                >
+                  <option value="">Chọn kích thước</option>
+                  {attributes.sizes.map((item) => (
+                    <option key={item.id} value={item.name}>
+                      {item.name} m
+                    </option>
+                  ))}
+                </select>
+                {formErrors.size && <small>{formErrors.size}</small>}
+              </label>
+
+              <label className={formErrors.material ? 'field-error' : ''}>
+                Chất liệu <span>*</span>
+                <select
+                  required
+                  value={form.material}
+                  onChange={(e) => handleChange('material', e.target.value)}
+                >
+                  <option value="">Chọn chất liệu</option>
+                  {attributes.materials.map((item) => (
+                    <option key={item.id} value={item.name}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+                {formErrors.material && <small>{formErrors.material}</small>}
+              </label>
+
+              <label className={formErrors.weight_kg ? 'field-error' : ''}>
+                Trọng lượng 1 cuộn kg <span>*</span>
                 <input
                   type="number"
-                  min="0"
-                  value={form.price}
-                  onChange={(e) => handleChange('price', e.target.value)}
+                  min="1"
+                  value={form.weight_kg}
+                  onChange={(e) => handleChange('weight_kg', e.target.value)}
+                  placeholder="Ví dụ: 100"
                 />
-                {formErrors.price && <small>{formErrors.price}</small>}
+                {formErrors.weight_kg && <small>{formErrors.weight_kg}</small>}
+              </label>
+
+              <label>
+                Giá bán / cuộn
+                <input
+                  type="text"
+                  value={formatMoney(form.price)}
+                  readOnly
+                />
+                <small>1kg = 100.000đ. Giá tự tính theo trọng lượng.</small>
               </label>
 
               <label className={formErrors.stock ? 'field-error' : ''}>
-                Tồn kho
+                Tồn kho cuộn <span>*</span>
                 <input
                   type="number"
                   min="0"
                   value={form.stock}
                   onChange={(e) => handleChange('stock', e.target.value)}
+                  placeholder="Ví dụ: 20"
                 />
                 {formErrors.stock && <small>{formErrors.stock}</small>}
               </label>
 
-              <label className={formErrors.size ? 'field-error' : ''}>
-                Kích thước
-                <input
-                  value={form.size}
-                  onChange={(e) => handleChange('size', e.target.value)}
-                />
-                {formErrors.size && <small>{formErrors.size}</small>}
-              </label>
-
-              <label className={formErrors.material ? 'field-error' : ''}>
-                Chất liệu
-                <input
-                  value={form.material}
-                  onChange={(e) => handleChange('material', e.target.value)}
-                />
-                {formErrors.material && <small>{formErrors.material}</small>}
+              <label>
+                Đơn vị bán
+                <input value="cuộn" readOnly />
               </label>
 
               <label className="full">
@@ -716,7 +918,7 @@ export default function AdminProducts() {
                   <div className="image-preview-list">
                     {form.images.map((src, index) => (
                       <div className="image-preview-item" key={`old-${src}-${index}`}>
-                        <img src={getImageUrl(src)} alt="" />
+                        <img src={getImageUrl(src, imageVersion)} alt="" />
                         <button type="button" onClick={() => removeOldImage(index)}>
                           Xóa
                         </button>
@@ -754,15 +956,24 @@ export default function AdminProducts() {
           <div className="confirm-box">
             <h3>Xác nhận xóa</h3>
             <p>
-              Bạn có chắc muốn xóa {confirmDelete.ids.length} sản phẩm? Thao tác này không thể hoàn tác.
+              Bạn có chắc muốn xóa {confirmDelete.ids.length} sản phẩm?
+              Thao tác này không thể hoàn tác.
             </p>
 
             <div className="confirm-actions">
-              <button type="button" className="secondary-btn" onClick={() => setConfirmDelete(null)}>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => setConfirmDelete(null)}
+              >
                 Hủy
               </button>
 
-              <button type="button" className="danger-btn" onClick={confirmDeleteProducts}>
+              <button
+                type="button"
+                className="danger-btn"
+                onClick={confirmDeleteProducts}
+              >
                 Xóa sản phẩm
               </button>
             </div>

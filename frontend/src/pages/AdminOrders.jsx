@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
+import {
+  RefreshCw,
+  Search,
+  Eye,
+  ChevronDown,
+  Phone,
+  MapPin,
+  CalendarDays,
+  Wallet,
+  Package
+} from 'lucide-react'
 import { fetchOrders, updateOrderStatus } from '../services/orderService'
 import './AdminOrders.css'
 
@@ -12,6 +23,10 @@ const orderStatuses = [
 ]
 
 const statusMap = Object.fromEntries(orderStatuses.map((item) => [item.value, item.label]))
+
+function formatMoney(value) {
+  return `${Number(value || 0).toLocaleString('vi-VN')} đ`
+}
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([])
@@ -40,11 +55,21 @@ export default function AdminOrders() {
     })
   }, [orders, search, statusFilter])
 
-  const loadOrders = async () => {
+  const summary = useMemo(() => {
+    return {
+      all: orders.length,
+      pending: orders.filter((item) => item.status === 'pending').length,
+      shipping: orders.filter((item) => item.status === 'shipping').length,
+      completed: orders.filter((item) => item.status === 'completed').length,
+      cancelled: orders.filter((item) => item.status === 'cancelled').length
+    }
+  }, [orders])
+
+  async function loadOrders() {
     try {
       setLoading(true)
       const data = await fetchOrders()
-      setOrders(Array.isArray(data) ? data : [])
+      setOrders(Array.isArray(data) ? data : data.items || [])
     } catch {
       toast.error('Không thể tải đơn hàng.')
     } finally {
@@ -52,7 +77,7 @@ export default function AdminOrders() {
     }
   }
 
-  const handleStatusChange = async (orderId, status) => {
+  async function handleStatusChange(orderId, status) {
     try {
       await updateOrderStatus(orderId, status)
 
@@ -74,22 +99,35 @@ export default function AdminOrders() {
 
       <section className="orders-hero">
         <div>
+          <span className="orders-eyebrow">Order Management</span>
           <h1>Quản lý đơn hàng</h1>
-          <p>Xem đơn hàng, lọc trạng thái và cập nhật tiến độ giao hàng.</p>
+          <p>Theo dõi đơn hàng, kiểm tra chi tiết và cập nhật trạng thái giao hàng.</p>
         </div>
 
         <button type="button" className="refresh-btn" onClick={loadOrders}>
+          <RefreshCw size={17} />
           Làm mới
         </button>
       </section>
 
+      <section className="orders-summary-grid">
+        <SummaryCard title="Tổng đơn" value={summary.all} tone="blue" />
+        <SummaryCard title="Chờ xử lý" value={summary.pending} tone="amber" />
+        <SummaryCard title="Đang giao" value={summary.shipping} tone="purple" />
+        <SummaryCard title="Hoàn thành" value={summary.completed} tone="green" />
+        <SummaryCard title="Đã hủy" value={summary.cancelled} tone="red" />
+      </section>
+
       <section className="orders-card">
         <div className="orders-toolbar">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo mã đơn, tên khách, số điện thoại..."
-          />
+          <div className="orders-search">
+            <Search size={18} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tìm mã đơn, tên khách, số điện thoại..."
+            />
+          </div>
 
           <select
             value={statusFilter}
@@ -104,92 +142,101 @@ export default function AdminOrders() {
           </select>
         </div>
 
-        <div className="orders-summary">
-          <span>Tổng đơn: {orders.length}</span>
+        <div className="orders-count-row">
           <span>Đang hiển thị: {filteredOrders.length}</span>
+          <span>Tổng đơn: {orders.length}</span>
         </div>
 
         <div className="orders-list">
-          {filteredOrders.map((order) => (
-            <article key={order.id} className="order-item">
-              <div className="order-main">
-                <div>
-                  <h2>Đơn hàng #{order.id}</h2>
-                  <p>
-                    {order.customer_name || 'Khách hàng'} • {order.phone || 'Chưa có SĐT'}
-                  </p>
+          {filteredOrders.map((order) => {
+            const isOpen = expandedId === order.id
+
+            return (
+              <article key={order.id} className="order-item">
+                <div className="order-main">
+                  <div>
+                    <h2>Đơn hàng #{order.id}</h2>
+                    <p>{order.customer_name || 'Khách hàng'}</p>
+                  </div>
+
+                  <span className={`status-badge ${order.status}`}>
+                    {statusMap[order.status] || order.status}
+                  </span>
                 </div>
 
-                <span className={`status-badge ${order.status}`}>
-                  {statusMap[order.status] || order.status}
-                </span>
-              </div>
-
-              <div className="order-info-grid">
-                <div>
-                  <span>Tổng tiền</span>
-                  <strong>{Number(order.total_price || 0).toLocaleString('vi-VN')} đ</strong>
+                <div className="order-info-grid">
+                  <InfoCard icon={<Phone />} title="Số điện thoại" value={order.phone || 'Chưa có'} />
+                  <InfoCard icon={<Wallet />} title="Tổng tiền" value={formatMoney(order.total_price)} />
+                  <InfoCard
+                    icon={<CalendarDays />}
+                    title="Ngày đặt"
+                    value={
+                      order.created_at
+                        ? new Date(order.created_at).toLocaleDateString('vi-VN')
+                        : 'Không rõ'
+                    }
+                  />
+                  <InfoCard icon={<Package />} title="Số sản phẩm" value={`${order.items?.length || 0} món`} />
                 </div>
 
-                <div>
-                  <span>Số sản phẩm</span>
-                  <strong>{order.items?.length || 0}</strong>
+                <div className="order-address">
+                  <MapPin size={17} />
+                  <span>{order.address || 'Chưa có địa chỉ giao hàng'}</span>
                 </div>
 
-                <div>
-                  <span>Ngày đặt</span>
-                  <strong>
-                    {order.created_at
-                      ? new Date(order.created_at).toLocaleDateString('vi-VN')
-                      : 'Không rõ'}
-                  </strong>
-                </div>
-              </div>
-
-              <div className="status-actions">
-                {orderStatuses.map((status) => (
-                  <button
-                    key={status.value}
-                    type="button"
-                    className={order.status === status.value ? 'active' : ''}
-                    onClick={() => handleStatusChange(order.id, status.value)}
+                <div className="order-actions-row">
+                  <select
+                    value={order.status}
+                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
                   >
-                    {status.label}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                className="detail-toggle"
-                onClick={() =>
-                  setExpandedId(expandedId === order.id ? null : order.id)
-                }
-              >
-                {expandedId === order.id ? 'Ẩn chi tiết' : 'Xem chi tiết'}
-              </button>
-
-              {expandedId === order.id && (
-                <div className="order-detail">
-                  <h3>Chi tiết đơn hàng</h3>
-
-                  <ul>
-                    {(order.items || []).map((item) => (
-                      <li key={item.id || item.product_id}>
-                        <span>
-                          {item.product_name || `Sản phẩm #${item.product_id}`}
-                        </span>
-
-                        <strong>
-                          {item.quantity} x {Number(item.price || 0).toLocaleString('vi-VN')} đ
-                        </strong>
-                      </li>
+                    {orderStatuses.map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
                     ))}
-                  </ul>
+                  </select>
+
+                  <button
+                    type="button"
+                    className="detail-toggle"
+                    onClick={() => setExpandedId(isOpen ? null : order.id)}
+                  >
+                    <Eye size={17} />
+                    {isOpen ? 'Ẩn chi tiết' : 'Xem chi tiết'}
+                    <ChevronDown size={17} className={isOpen ? 'rotate' : ''} />
+                  </button>
                 </div>
-              )}
-            </article>
-          ))}
+
+                {isOpen && (
+                  <div className="order-detail">
+                    <h3>Chi tiết sản phẩm</h3>
+
+                    <ul>
+                      {(order.items || []).map((item) => (
+                        <li key={item.id || item.product_id}>
+                          <div>
+                            <strong>
+                              {item.product_name || `Sản phẩm #${item.product_id}`}
+                            </strong>
+                            <span>Số lượng: {item.quantity}</span>
+                          </div>
+
+                          <b>{formatMoney(Number(item.price || 0) * Number(item.quantity || 0))}</b>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {order.note && (
+                      <div className="order-note">
+                        <strong>Ghi chú:</strong>
+                        <p>{order.note}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </article>
+            )
+          })}
 
           {!loading && filteredOrders.length === 0 && (
             <div className="empty-orders">
@@ -198,6 +245,25 @@ export default function AdminOrders() {
           )}
         </div>
       </section>
+    </div>
+  )
+}
+
+function SummaryCard({ title, value, tone }) {
+  return (
+    <article className={`orders-summary-card ${tone}`}>
+      <span>{title}</span>
+      <strong>{value}</strong>
+    </article>
+  )
+}
+
+function InfoCard({ icon, title, value }) {
+  return (
+    <div className="order-info-card">
+      {icon}
+      <span>{title}</span>
+      <strong>{value}</strong>
     </div>
   )
 }

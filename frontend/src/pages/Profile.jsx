@@ -1,25 +1,41 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getProfile, updateProfile, logout } from '../services/authService'
+import { fetchMyOrders } from '../services/orderService'
+import './Profile.css'
 
 export default function Profile() {
+  const navigate = useNavigate()
+
   const [user, setUser] = useState(null)
+  const [orders, setOrders] = useState([])
   const [editing, setEditing] = useState(false)
   const [formData, setFormData] = useState({})
   const [message, setMessage] = useState('')
 
   useEffect(() => {
     loadProfile()
+    loadOrders()
   }, [])
 
-  const loadProfile = async () => {
+  async function loadProfile() {
     const data = await getProfile()
     setUser(data)
     setFormData(data)
   }
 
-  const handleSubmit = async (event) => {
+  async function loadOrders() {
+    try {
+      const data = await fetchMyOrders()
+      setOrders(Array.isArray(data) ? data.slice(0, 3) : [])
+    } catch {
+      setOrders([])
+    }
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault()
+
     try {
       const updated = await updateProfile(formData)
       setUser(updated)
@@ -31,78 +47,158 @@ export default function Profile() {
     }
   }
 
-  const handleLogout = () => {
+  function handleLogout() {
     logout()
     window.location.href = '/'
   }
 
-  if (!user) return <div className="min-h-screen flex items-center justify-center">Đang tải...</div>
+  if (!user) {
+    return <div className="profile-loading">Đang tải thông tin...</div>
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-20">
-      <div className="mx-auto w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-semibold text-slate-900">Thông tin cá nhân</h1>
-          <button onClick={handleLogout} className="rounded-3xl bg-red-500 px-4 py-2 text-sm text-white">Đăng xuất</button>
-        </div>
-        {message && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">{message}</div>}
+    <div className="profile-page">
+      <div className="profile-container">
+        <button type="button" className="profile-back-btn" onClick={() => navigate(-1)}>
+          ← Quay lại
+        </button>
 
-        {!editing ? (
-          <div className="mt-8 space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+        <div className="profile-layout">
+          <section className="profile-card">
+            <div className="profile-header">
               <div>
-                <p className="text-sm text-slate-500">Họ tên</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{user.full_name}</p>
+                <span className="profile-badge">Tài khoản</span>
+                <h1>Thông tin cá nhân</h1>
+                <p>Quản lý thông tin liên hệ và địa chỉ giao hàng.</p>
               </div>
+
+              <button onClick={handleLogout} className="profile-logout-btn">
+                Đăng xuất
+              </button>
+            </div>
+
+            {message && <div className="profile-message">{message}</div>}
+
+            {!editing ? (
+              <div className="profile-info">
+                <div className="profile-info-grid">
+                  <Info label="Họ tên" value={user.full_name} />
+                  <Info label="Email" value={user.email} />
+                  <Info label="Số điện thoại" value={user.phone || 'Chưa cập nhật'} />
+                  <Info label="Vai trò" value={user.role} />
+                </div>
+
+                <Info label="Địa chỉ" value={user.address || 'Chưa cập nhật'} />
+
+                <button onClick={() => setEditing(true)} className="profile-primary-btn">
+                  Chỉnh sửa thông tin
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="profile-form">
+                <div className="profile-form-grid">
+                  <label>
+                    Họ tên
+                    <input
+                      required
+                      value={formData.full_name || ''}
+                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                    />
+                  </label>
+
+                  <label>
+                    Email
+                    <input
+                      type="email"
+                      required
+                      value={formData.email || ''}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </label>
+
+                  <label>
+                    Số điện thoại
+                    <input
+                      value={formData.phone || ''}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    />
+                  </label>
+                </div>
+
+                <label>
+                  Địa chỉ
+                  <textarea
+                    rows="3"
+                    value={formData.address || ''}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  />
+                </label>
+
+                <div className="profile-form-actions">
+                  <button type="submit" className="profile-primary-btn">
+                    Lưu thay đổi
+                  </button>
+
+                  <button type="button" onClick={() => setEditing(false)} className="profile-secondary-btn">
+                    Hủy
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
+
+          <section className="profile-card">
+            <div className="profile-orders-header">
               <div>
-                <p className="text-sm text-slate-500">Email</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{user.email}</p>
+                <span className="profile-badge">Đơn hàng</span>
+                <h2>Sản phẩm đã đặt</h2>
+                <p>Các đơn hàng gần đây của bạn.</p>
               </div>
-              <div>
-                <p className="text-sm text-slate-500">Số điện thoại</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{user.phone || 'Chưa cập nhật'}</p>
+
+              <Link to="/my-orders" className="profile-primary-link">
+                Xem tất cả
+              </Link>
+            </div>
+
+            {orders.length === 0 ? (
+              <div className="profile-empty-orders">
+                <p>Bạn chưa có đơn hàng nào.</p>
+                <Link to="/products">Mua sản phẩm</Link>
               </div>
-              <div>
-                <p className="text-sm text-slate-500">Vai trò</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{user.role}</p>
+            ) : (
+              <div className="profile-order-list">
+                {orders.map((order) => (
+                  <article key={order.id} className="profile-order-item">
+                    <div className="profile-order-top">
+                      <strong>Đơn #{order.id}</strong>
+                      <span>{Number(order.total_price || 0).toLocaleString('vi-VN')} đ</span>
+                    </div>
+
+                    <ul>
+                      {(order.items || []).slice(0, 2).map((item, index) => (
+                        <li key={index}>
+                          {item.product_name || `Sản phẩm #${item.product_id}`} x {item.quantity}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Link to="/my-orders">Xem chi tiết / Đặt lại</Link>
+                  </article>
+                ))}
               </div>
-            </div>
-            <div>
-              <p className="text-sm text-slate-500">Địa chỉ</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{user.address || 'Chưa cập nhật'}</p>
-            </div>
-            <button onClick={() => setEditing(true)} className="mt-6 rounded-3xl bg-brand-900 px-6 py-3 text-sm font-semibold text-white">Chỉnh sửa</button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block text-sm text-slate-700">
-                Họ tên
-                <input required value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none" />
-              </label>
-              <label className="block text-sm text-slate-700">
-                Email
-                <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none" />
-              </label>
-              <label className="block text-sm text-slate-700">
-                Số điện thoại
-                <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none" />
-              </label>
-            </div>
-            <label className="block text-sm text-slate-700">
-              Địa chỉ
-              <textarea rows="3" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none" />
-            </label>
-            <div className="flex gap-4">
-              <button type="submit" className="rounded-3xl bg-brand-900 px-6 py-3 text-sm font-semibold text-white">Lưu thay đổi</button>
-              <button type="button" onClick={() => setEditing(false)} className="rounded-3xl border border-slate-300 px-6 py-3 text-sm text-slate-700">Hủy</button>
-            </div>
-            <div className="mt-6">
-              <Link to="/my-orders" className="text-brand-900 hover:underline">Xem lịch sử đơn hàng</Link>
-            </div>
-          </form>
-        )}
+            )}
+          </section>
+        </div>
       </div>
+    </div>
+  )
+}
+
+function Info({ label, value }) {
+  return (
+    <div className="profile-info-box">
+      <p>{label}</p>
+      <strong>{value}</strong>
     </div>
   )
 }

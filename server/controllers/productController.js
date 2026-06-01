@@ -2,13 +2,12 @@ import * as productModel from '../models/productModel.js'
 
 function parseImages(bodyImages, files = []) {
   const uploaded = files.map((file) => `/uploads/${file.filename}`)
-
   let existing = []
 
   if (bodyImages) {
     if (Array.isArray(bodyImages)) {
       existing = bodyImages
-    } else if (typeof bodyImages === 'string') {
+    } else {
       try {
         const parsed = JSON.parse(bodyImages)
         existing = Array.isArray(parsed) ? parsed : [bodyImages]
@@ -18,7 +17,48 @@ function parseImages(bodyImages, files = []) {
     }
   }
 
-  return [...existing, ...uploaded].filter(Boolean)
+  return [...uploaded, ...existing].filter(Boolean)
+}
+
+function parseVariants(raw) {
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return []
+  }
+}
+
+function buildProductData(req) {
+  return {
+    name: req.body.name?.trim(),
+    description: req.body.description || '',
+    images: parseImages(req.body.images, req.files),
+    variants: parseVariants(req.body.variants)
+  }
+}
+
+function validateProduct(data) {
+  if (!data.name) return 'Tên sản phẩm là bắt buộc.'
+  if (!data.variants.length) return 'Vui lòng thêm ít nhất 1 biến thể sản phẩm.'
+
+  for (const variant of data.variants) {
+    if (!variant.category || !variant.size || !variant.material) {
+      return 'Biến thể phải có danh mục, kích thước và chất liệu.'
+    }
+
+    if (Number(variant.weight_kg || 0) <= 0) {
+      return 'Trọng lượng biến thể phải lớn hơn 0.'
+    }
+
+    if (Number(variant.stock || 0) < 0) {
+      return 'Tồn kho không hợp lệ.'
+    }
+  }
+
+  return ''
 }
 
 export async function getProducts(req, res) {
@@ -48,25 +88,14 @@ export async function getProduct(req, res) {
 
 export async function createProduct(req, res) {
   try {
-    const price = Number(req.body.price || 0)
+    const data = buildProductData(req)
+    const error = validateProduct(data)
 
-    if (!req.body.name?.trim()) {
-      return res.status(400).json({ error: 'Tên sản phẩm là bắt buộc!' })
+    if (error) {
+      return res.status(400).json({ error })
     }
 
-    if (Number.isNaN(price) || price < 0) {
-      return res.status(400).json({ error: 'Giá sản phẩm không hợp lệ!' })
-    }
-
-    const productData = {
-      ...req.body,
-      price,
-      stock: Number(req.body.stock || 0),
-      images: parseImages(req.body.images, req.files)
-    }
-
-    const product = await productModel.createProduct(productData)
-
+    const product = await productModel.createProduct(data)
     res.status(201).json(product)
   } catch (error) {
     console.error('Create Product Error:', error.message)
@@ -76,24 +105,20 @@ export async function createProduct(req, res) {
 
 export async function updateProduct(req, res) {
   try {
-    const { id } = req.params
-    const existing = await productModel.getProductById(id)
+    const existing = await productModel.getProductById(req.params.id)
 
     if (!existing) {
       return res.status(404).json({ error: 'Sản phẩm không tồn tại.' })
     }
 
-    const images = parseImages(req.body.images, req.files)
+    const data = buildProductData(req)
+    const error = validateProduct(data)
 
-    const updateData = {
-      ...req.body,
-      price: Number(req.body.price || 0),
-      stock: Number(req.body.stock || 0),
-      images
+    if (error) {
+      return res.status(400).json({ error })
     }
 
-    const updated = await productModel.updateProduct(id, updateData)
-
+    const updated = await productModel.updateProduct(req.params.id, data)
     res.json(updated)
   } catch (error) {
     console.error('Update Product Error:', error.message)
@@ -105,14 +130,13 @@ export async function updateProduct(req, res) {
 
 export async function deleteProduct(req, res) {
   try {
-    const { id } = req.params
-    const existing = await productModel.getProductById(id)
+    const existing = await productModel.getProductById(req.params.id)
 
     if (!existing) {
       return res.status(404).json({ error: 'Sản phẩm không tồn tại.' })
     }
 
-    await productModel.deleteProduct(id)
+    await productModel.deleteProduct(req.params.id)
 
     res.json({
       success: true,
