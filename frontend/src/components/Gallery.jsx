@@ -27,7 +27,9 @@ export default function Gallery({ images }) {
   if (!list.length) {
     return (
       <img
-        src="https://via.placeholder.com/760x460?text=No+Image"
+        src="https://onError={(e) => {
+  e.currentTarget.src = "/no-image.png";
+}}/760x460?text=No+Image"
         alt="No image"
         className="gallery-empty"
       />
@@ -43,7 +45,9 @@ export default function Gallery({ images }) {
           alt={`Hình ảnh ${index + 1}`}
           onError={(e) => {
             e.currentTarget.src =
-              'https://via.placeholder.com/400x300?text=No+Image'
+              'https://onError={(e) => {
+  e.currentTarget.src = "/no-image.png";
+}}/400x300?text=No+Image'
           }}
         />
       ))}
