@@ -27,7 +27,7 @@ export default function Gallery({ images }) {
   if (!list.length) {
     return (
       <img
-        src="https://"/home.PNG"/760x460?text=No+Image"
+        src="/home.PNG"
         alt="No image"
         className="gallery-empty"
       />
@@ -42,8 +42,7 @@ export default function Gallery({ images }) {
           src={getImageUrl(src)}
           alt={`Hình ảnh ${index + 1}`}
           onError={(e) => {
-            e.currentTarget.src =
-              'https://"/home.PNG"/400x300?text=No+Image'
+            e.currentTarget.src = '/home.PNG'
           }}
         />
       ))}
