@@ -72,7 +72,7 @@ export default function Home() {
 
             <div className="home-hero-image">
             <img
-              src={getImageUrl('/uploads/Capture.PNG')}
+              src={getImageUrl('/uploads/home.PNG')}
               alt="Banner dây ngư nghiệp"
             />
           </div>
