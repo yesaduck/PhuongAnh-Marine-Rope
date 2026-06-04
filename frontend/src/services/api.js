@@ -2,9 +2,10 @@ import axios from 'axios'
 
 const TOKEN_KEY = 'pa_token'
 const USER_KEY = 'pa_user'
+const API_URL = import.meta.env.VITE_API_URL
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
+  baseURL: API_URL ? `${API_URL}/api` : '/api'
 })
 
 api.interceptors.request.use(

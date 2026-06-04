@@ -1,6 +1,5 @@
 import './Gallery.css'
-
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5002'
+import { getImageUrl } from '../utils/imageHelpers'
 
 function normalizeImages(images) {
   if (!images) return []
@@ -20,13 +19,6 @@ function normalizeImages(images) {
   }
 
   return []
-}
-
-function getImageUrl(src) {
-  if (!src) return 'https://via.placeholder.com/760x460?text=No+Image'
-  if (src.startsWith('http')) return src
-  if (src.startsWith('blob:')) return src
-  return `${API_ORIGIN}${src}`
 }
 
 export default function Gallery({ images }) {

@@ -22,6 +22,7 @@ dotenv.config({
 
 const app = express()
 const PORT = Number(process.env.PORT) || 5002
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`
 const uploadsDir = path.join(__dirname, 'uploads')
 
 if (!fs.existsSync(uploadsDir)) {
@@ -31,7 +32,10 @@ if (!fs.existsSync(uploadsDir)) {
 
 app.use(
   cors({
-    origin: true,
+    origin: [
+      'http://localhost:5173',
+      'https://phuong-anh-marine-rope.vercel.app'
+    ],
     credentials: true
   })
 )
@@ -78,8 +82,8 @@ app.use((err, req, res, next) => {
 })
 
 const server = app.listen(PORT, () => {
-  console.log(`Server chạy tại: http://localhost:${PORT}`)
-  console.log(`Health check: http://localhost:${PORT}/api/health`)
+  console.log(`Server running on: ${BASE_URL}`)
+  console.log(`Health check: ${BASE_URL}/api/health`)
 })
 
 server.on('error', (error) => {

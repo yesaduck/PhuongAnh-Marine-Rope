@@ -3,6 +3,11 @@ export function uploadImage(req, res) {
     return res.status(400).json({ error: 'Không có file.' })
   }
 
-  const imageUrl = `/uploads/${req.file.filename}`
-  res.json({ url: imageUrl })
+  const BASE_URL = process.env.BASE_URL || 'http://localhost:5002'
+  const imagePath = `/uploads/${req.file.filename}`
+
+  res.json({
+    url: imagePath,
+    image_url: `${BASE_URL}${imagePath}`
+  })
 }

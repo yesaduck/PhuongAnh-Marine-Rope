@@ -8,9 +8,9 @@ import {
   updateProduct
 } from '../services/productService'
 import { fetchProductAttributes } from '../services/productAttributeService'
+import { getImageUrl as buildImageUrl } from '../utils/imageHelpers'
 import './AdminProducts.css'
 
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5002'
 const ITEMS_PER_PAGE = 10
 const PRICE_PER_KG = 100000
 
@@ -62,10 +62,12 @@ function normalizeSizeValue(value) {
 
 function getImageUrl(src, version = '') {
   if (!src) return ''
-  if (src.startsWith('blob:')) return src
-  if (src.startsWith('http')) return src
+  if (version) {
+    const separator = src.includes('?') ? '&' : '?'
+    return buildImageUrl(`${src}${separator}v=${version}`)
+  }
 
-  return `${API_ORIGIN}${src}?v=${version}`
+  return buildImageUrl(src)
 }
 
 function calculatePrice(weightKg) {

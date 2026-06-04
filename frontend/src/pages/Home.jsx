@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom'
 import { Anchor, ShieldCheck, Truck } from 'lucide-react'
 import { fetchProducts } from '../services/productService'
 import ProductCard from '../components/ProductCard'
+import { getImageUrl } from '../utils/imageHelpers'
 import './Home.css'
-
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5002'
 
 const highlightCategories = [
   'Dây neo tàu',
@@ -73,7 +72,7 @@ export default function Home() {
 
             <div className="home-hero-image">
             <img
-              src={`${API_ORIGIN}/uploads/Capture.PNG`}
+              src={getImageUrl('/uploads/Capture.PNG')}
               alt="Banner dây ngư nghiệp"
             />
           </div>

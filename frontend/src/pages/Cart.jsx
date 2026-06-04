@@ -13,26 +13,11 @@ import {
   updateItem,
   clearCart
 } from '../services/cartService'
+import { getImageUrl } from '../utils/imageHelpers'
 import './Cart.css'
 
 const FALLBACK_IMAGE =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="500" height="400"><rect width="100%" height="100%" fill="%23f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-family="Arial" font-size="28">No Image</text></svg>'
-
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5002'
-
-function getImageUrl(item) {
-  const src = item.image || item.imageUrl
-
-  if (!src) {
-    return FALLBACK_IMAGE
-  }
-
-  if (src.startsWith('http') || src.startsWith('blob:')) {
-    return src
-  }
-
-  return `${API_ORIGIN}${src}`
-}
 
 function formatMoney(value) {
   return `${Number(value || 0).toLocaleString('vi-VN')} đ`
@@ -167,7 +152,7 @@ export default function Cart() {
                     className="cart-item-image"
                   >
                     <img
-                      src={getImageUrl(item)}
+                      src={getImageUrl(item.image || item.imageUrl)}
                       alt={item.name}
                       onError={(e) => {
                         e.currentTarget.onerror = null

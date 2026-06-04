@@ -1,4 +1,5 @@
 import './About.css'
+import { getImageUrl } from '../utils/imageHelpers'
 
 export default function About() {
   return (
@@ -15,7 +16,7 @@ export default function About() {
 
         <div className="about-hero-image">
           <img
-            src="http://localhost:5002/uploads/about.PNG"
+            src={getImageUrl('/uploads/about.PNG')}
             alt="Xưởng sản xuất dây ngư nghiệp"
           />
         </div>
