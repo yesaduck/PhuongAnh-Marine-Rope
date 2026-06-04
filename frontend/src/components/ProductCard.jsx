@@ -42,7 +42,7 @@ export default function ProductCard({ product }) {
           alt={product.name}
           onError={(e) => {
             e.currentTarget.src =
-              'https://"/home.PNG"/400x300?text=No+Image'
+              'https://via.placeholder.com/400x300?text=No+Image'
           }}
         />
       </Link>
