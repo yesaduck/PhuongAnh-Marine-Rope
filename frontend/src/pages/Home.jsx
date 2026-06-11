@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { Anchor, ShieldCheck, Truck } from 'lucide-react'
 import { fetchProducts } from '../services/productService'
 import ProductCard from '../components/ProductCard'
-import { getImageUrl } from '../utils/imageHelpers'
 import './Home.css'
 
 const highlightCategories = [
@@ -36,9 +35,14 @@ export default function Home() {
   const [products, setProducts] = useState([])
 
   useEffect(() => {
-    fetchProducts({ limit: 5 }).then((data) => {
-      setProducts(data.items || data || [])
-    })
+    fetchProducts({ limit: 5 })
+      .then((data) => {
+        setProducts(data.items || data || [])
+      })
+      .catch((error) => {
+        console.error('Lỗi tải sản phẩm:', error)
+        setProducts([])
+      })
   }, [])
 
   return (
@@ -70,9 +74,9 @@ export default function Home() {
             </div>
           </div>
 
-            <div className="home-hero-image">
+          <div className="home-hero-image">
             <img
-              src={getImageUrl('/uploads/home.PNG')}
+              src="/images/home.PNG"
               alt="Banner dây ngư nghiệp"
             />
           </div>
@@ -124,7 +128,10 @@ export default function Home() {
 
         <div className="home-product-grid">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+            />
           ))}
 
           {products.length === 0 && (
