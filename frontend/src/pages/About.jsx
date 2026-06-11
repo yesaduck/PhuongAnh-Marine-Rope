@@ -16,7 +16,7 @@ export default function About() {
 
         <div className="about-hero-image">
           <img
-            src={getImageUrl('/uploads/about.PNG')}
+            src={getImageUrl('/images/about.PNG')}
             alt="Xưởng sản xuất dây ngư nghiệp"
           />
         </div>
