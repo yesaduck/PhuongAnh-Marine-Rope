@@ -41,8 +41,7 @@ export default function ProductCard({ product }) {
           src={imageUrl}
           alt={product.name}
           onError={(e) => {
-            e.currentTarget.src =
-              'https://via.placeholder.com/400x300?text=No+Image'
+            e.currentTarget.src = '/images/no-image.png'
           }}
         />
       </Link>
