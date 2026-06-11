@@ -25,7 +25,6 @@ const FALLBACK_IMAGE =
 
 function normalizeImages(images) {
   if (!images) return []
-
   if (Array.isArray(images)) return images
 
   if (typeof images === 'string') {
@@ -47,21 +46,19 @@ function getItemImageUrl(item) {
   const images = normalizeImages(item.images)
   const src = images[0] || item.image || item.imageUrl
 
-  if (!src) return FALLBACK_IMAGE
-  return getImageUrl(src)
+  return src ? getImageUrl(src) : FALLBACK_IMAGE
 }
 
 export default function Checkout() {
   const navigate = useNavigate()
-  const cart = getCart()
 
+  const [cart] = useState(() => getCart())
   const [form, setForm] = useState({
     customer_name: '',
     phone: '',
     address: '',
     note: ''
   })
-
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [successModal, setSuccessModal] = useState(false)
@@ -78,7 +75,7 @@ export default function Checkout() {
           address: user.address || ''
         }))
       } catch {
-        // Bỏ qua nếu không lấy được thông tin
+        // Không cần xử lý nếu chưa đăng nhập
       }
     }
 
@@ -90,10 +87,9 @@ export default function Checkout() {
   }, [cart])
 
   const total = useMemo(() => {
-    return cart.reduce(
-      (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
-      0
-    )
+    return cart.reduce((sum, item) => {
+      return sum + Number(item.price || 0) * Number(item.quantity || 0)
+    }, 0)
   }, [cart])
 
   const handleChange = (field, value) => {
@@ -102,24 +98,23 @@ export default function Checkout() {
       [field]: value
     }))
 
-    if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: ''
-      }))
-    }
+    setErrors((prev) => ({
+      ...prev,
+      [field]: ''
+    }))
   }
 
   const validateForm = () => {
     const newErrors = {}
+    const phone = form.phone.trim()
 
     if (!form.customer_name.trim()) {
       newErrors.customer_name = 'Vui lòng nhập họ tên.'
     }
 
-    if (!form.phone.trim()) {
+    if (!phone) {
       newErrors.phone = 'Vui lòng nhập số điện thoại.'
-    } else if (!/^(0|\+84)[0-9]{9,10}$/.test(form.phone.trim())) {
+    } else if (!/^(0|\+84)[0-9]{9,10}$/.test(phone)) {
       newErrors.phone = 'Số điện thoại không hợp lệ.'
     }
 
@@ -128,11 +123,14 @@ export default function Checkout() {
     }
 
     setErrors(newErrors)
+
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+
+    if (loading) return
 
     if (cart.length === 0) {
       toast.error('Giỏ hàng đang trống.')
@@ -145,44 +143,43 @@ export default function Checkout() {
       return
     }
 
+    const payload = {
+      customer_name: form.customer_name.trim(),
+      phone: form.phone.trim(),
+      address: form.address.trim(),
+      note: form.note.trim(),
+      total_price: total,
+      items: cart.map((item) => ({
+        product_id: item.product_id || item.productId || item.id,
+        quantity: Number(item.quantity || 1),
+        price: Number(item.price || 0)
+      }))
+    }
+
     try {
       setLoading(true)
-
-      const payload = {
-        customer_name: form.customer_name.trim(),
-        phone: form.phone.trim(),
-        address: form.address.trim(),
-        note: form.note.trim(),
-        total_price: total,
-        items: cart.map((item) => ({
-          product_id: item.product_id || item.productId || item.id,
-          quantity: Number(item.quantity || 1),
-          price: Number(item.price || 0)
-        }))
-      }
-
-      console.log('Order payload:', payload)
 
       await createOrder(payload)
 
       clearCart()
       setSuccessModal(true)
-  } catch (err) {
-  console.log('STATUS:', err.response?.status)
-  console.log('DATA:', JSON.stringify(err.response?.data, null, 2))
-  console.log('FULL ERROR:', err)
-
-  toast.error(
-    err.response?.data?.sqlMessage ||
-    err.response?.data?.error ||
-    'Có lỗi trong quá trình gửi đơn hàng.'
-  )
-} finally {
-  setLoading(false)
-}
+    } catch (err) {
+      toast.error(
+        err.response?.data?.sqlMessage ||
+          err.response?.data?.error ||
+          'Có lỗi trong quá trình gửi đơn hàng.'
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
-  if (cart.length === 0) {
+  const handleCloseSuccess = () => {
+    setSuccessModal(false)
+    navigate('/products', { replace: true })
+  }
+
+  if (cart.length === 0 && !successModal) {
     return (
       <div className="checkout-page">
         <section className="checkout-empty">
@@ -308,7 +305,8 @@ export default function Checkout() {
               <article key={item.productId || item.id} className="checkout-item">
                 <img
                   src={getItemImageUrl(item)}
-                  alt={item.name}
+                  alt={item.name || 'Sản phẩm'}
+                  loading="lazy"
                   onError={(e) => {
                     e.currentTarget.onerror = null
                     e.currentTarget.src = FALLBACK_IMAGE
@@ -372,33 +370,18 @@ export default function Checkout() {
       {successModal && (
         <div className="checkout-success-overlay">
           <div className="checkout-success-modal">
-            <div className="checkout-success-icon">
-              <CheckCircle2 size={42} />
-            </div>
+            <div className="checkout-success-icon">✓</div>
 
             <h3>Đặt hàng thành công</h3>
 
             <p>
-              Cảm ơn bạn đã đặt hàng tại Phương Anh Rope.
-              Chúng tôi sẽ liên hệ xác nhận đơn hàng trong thời gian sớm nhất.
+              Cảm ơn bạn đã đặt hàng tại Phương Anh Rope. Chúng tôi sẽ liên hệ
+              xác nhận đơn hàng trong thời gian sớm nhất.
             </p>
 
-            <div className="checkout-success-actions">
-              <button
-                type="button"
-                onClick={() => navigate('/my-orders', { replace: true })}
-              >
-                Xem đơn hàng
-              </button>
-
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => navigate('/products', { replace: true })}
-              >
-                Tiếp tục mua hàng
-              </button>
-            </div>
+            <button type="button" onClick={handleCloseSuccess}>
+              Đóng
+            </button>
           </div>
         </div>
       )}

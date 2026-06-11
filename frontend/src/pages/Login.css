@@ -85,11 +85,12 @@
 
 .login-hero h1 {
   font-size: 42px;
-  margin-bottom: 14px;
+  margin: 0 0 14px;
   font-weight: 800;
 }
 
 .login-hero p {
+  margin: 0;
   font-size: 18px;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.95);
@@ -125,6 +126,7 @@
 }
 
 .login-box-header h2 {
+  margin: 0;
   font-size: 22px;
   font-weight: 500;
 }
@@ -277,14 +279,8 @@
 .google-icon {
   width: 22px;
   height: 22px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  color: #4285f4;
-  font-weight: 900;
-  border: 1px solid #ddd;
+  display: block;
+  flex-shrink: 0;
 }
 
 .login-register-line {
@@ -319,12 +315,12 @@
 .login-footer-grid h3 {
   color: #333;
   font-size: 14px;
-  margin-bottom: 12px;
+  margin: 0 0 12px;
   text-transform: uppercase;
 }
 
 .login-footer-grid p {
-  margin-bottom: 7px;
+  margin: 0 0 7px;
 }
 
 .login-copyright {
